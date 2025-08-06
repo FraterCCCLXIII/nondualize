@@ -15,38 +15,39 @@ export function BackgroundSlideshow() {
     const interval = setInterval(() => {
       setIsTransitioning(true);
       
+      // Wait for transition to complete before switching
       setTimeout(() => {
         setCurrentImage(nextImage);
         setNextImage((nextImage + 1) % images.length);
         setIsTransitioning(false);
-      }, 2000); // Match transition duration
+      }, 4000); // Full transition duration
       
-    }, 8000); // Change image every 8 seconds
+    }, 10000); // Change image every 10 seconds (longer for smoother experience)
 
     return () => clearInterval(interval);
   }, [nextImage]);
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {/* Current Background Image */}
+      {/* Current Background Image with Ken Burns */}
       <div className="absolute inset-0">
         <img
           src={images[currentImage]}
           alt={`Background ${currentImage + 1}`}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover ken-burns-${(currentImage % 4) + 1}`}
         />
       </div>
 
-      {/* Next Background Image (for crossfade) */}
+      {/* Next Background Image (for crossfade) with Ken Burns */}
       <div 
-        className={`absolute inset-0 transition-opacity duration-[2000ms] ease-in-out ${
+        className={`absolute inset-0 transition-opacity duration-[4000ms] ease-in-out ${
           isTransitioning ? 'opacity-100' : 'opacity-0'
         }`}
       >
         <img
           src={images[nextImage]}
           alt={`Background ${nextImage + 1}`}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover ken-burns-${(nextImage % 4) + 1}`}
         />
       </div>
 
