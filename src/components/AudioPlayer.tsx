@@ -131,7 +131,9 @@ export function AudioPlayer() {
       <Button
         variant="ghost"
         size="icon"
-        className="absolute top-4 left-4 z-50 glass-morphism hover:bg-[hsl(var(--control-hover))] text-white"
+        className={`absolute top-4 left-4 z-50 glass-morphism hover:bg-[hsl(var(--control-hover))] text-white transition-opacity duration-300 ${
+          isDrawerOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
         onClick={() => setIsDrawerOpen(true)}
       >
         <Menu className="h-6 w-6" />
