@@ -151,7 +151,7 @@ export function AudioPlayer() {
 
       {/* Player Controls */}
       <div className="absolute bottom-0 left-0 right-0 p-6">
-        <div className="glass-morphism rounded-xl p-4 max-w-2xl">
+        <div className="rounded-xl p-4 max-w-2xl">
           {/* Track Info */}
           <div className="mb-4">
             <h2 className="text-xl font-semibold text-white mb-1">
