@@ -7,6 +7,7 @@ This directory contains force-aligned caption files for each audio track. The ca
 - `track-1-captions.json` - Captions for "What is Ego Death?"
 - `track-2-captions.json` - Captions for "What is Non-Duality?"
 - `track-3-captions.json` - Captions for "The Four Selves with Andrew Cohen"
+- `track-7-captions.srt` - Captions for "Realigning the Soul" (SRT format)
 - etc.
 
 ## Caption File Format
@@ -33,10 +34,11 @@ Each caption file should be a JSON array with the following structure:
 - **text**: The caption text to display
 
 ## Adding New Captions
-1. Create a new JSON file following the naming convention: `track-{trackNumber}-captions.json`
+1. Create a new caption file following the naming convention: `track-{trackNumber}-captions.json` (JSON format) or `track-{trackNumber}-captions.srt` (SRT format)
 2. Use precise timing that matches the audio content
 3. Keep caption text concise and readable
 4. Ensure smooth transitions between captions
+5. The system will automatically try JSON format first, then SRT format if JSON is not found
 
 ## Features
 - **Burn-in effect**: Captions fade in/out smoothly
@@ -48,4 +50,6 @@ Each caption file should be a JSON array with the following structure:
 - Captions are loaded automatically when switching tracks
 - The system gracefully handles missing caption files
 - Caption timing is synchronized with audio playback
-- Captions can be toggled on/off via the UI 
+- Captions can be toggled on/off via the UI
+- Supports both JSON and SRT subtitle formats
+- SRT files are automatically parsed and speaker labels are removed 

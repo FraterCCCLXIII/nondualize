@@ -7,6 +7,7 @@ import { TrackDrawer } from "./TrackDrawer";
 import { BackgroundSlideshow } from "./BackgroundSlideshow";
 import { CaptionOverlay } from "./CaptionOverlay";
 import { ShareModal } from "./ShareModal";
+import { parseSrtFile, type Caption } from "@/lib/utils";
 
 interface Track {
   id: string;
@@ -17,11 +18,7 @@ interface Track {
   defaultBackgroundMusic?: string; // ID of the default background music track
 }
 
-interface Caption {
-  start: number;
-  end: number;
-  text: string;
-}
+
 
 const mockTracks: Track[] = [
   {
@@ -217,13 +214,25 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   useEffect(() => {
     const loadCaptions = async () => {
       try {
-        const response = await fetch(`/transcripts/track-${currentTrack + 1}-captions.json`);
-        if (response.ok) {
-          const captionData = await response.json();
+        // Try JSON format first
+        const jsonResponse = await fetch(`/transcripts/track-${currentTrack + 1}-captions.json`);
+        if (jsonResponse.ok) {
+          const captionData = await jsonResponse.json();
           setCaptions(captionData);
-        } else {
-          setCaptions([]);
+          return;
         }
+        
+        // Try SRT format if JSON not found
+        const srtResponse = await fetch(`/transcripts/track-${currentTrack + 1}-captions.srt`);
+        if (srtResponse.ok) {
+          const srtContent = await srtResponse.text();
+          const captionData = parseSrtFile(srtContent);
+          setCaptions(captionData);
+          return;
+        }
+        
+        // No captions found
+        setCaptions([]);
       } catch (error) {
         console.log('No captions available for this track');
         setCaptions([]);
