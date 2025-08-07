@@ -1,53 +1,89 @@
 import { useState, useEffect } from "react";
-import cosmic1 from "@/assets/cosmic-1.jpg";
-import nature1 from "@/assets/nature-1.jpg";
-import cosmic2 from "@/assets/cosmic-2.jpg";
-import nature2 from "@/assets/nature-2.jpg";
 
-const images = [cosmic1, nature1, cosmic2, nature2];
+// Import all available images
+import img1 from "@/assets/pexels-dennisariel-32880873.jpg";
+import img2 from "@/assets/pexels-lum3n-44775-167684.jpg";
+import img3 from "@/assets/pexels-dennisariel-32880874.jpg";
+import img4 from "@/assets/pexels-simon73-1323550.jpg";
+import img5 from "@/assets/pexels-todd-trapani-488382-1420440.jpg";
+import img6 from "@/assets/pexels-luisfe-5191926.jpg";
+import img7 from "@/assets/pexels-alberlan-7311921.jpg";
+import img8 from "@/assets/pexels-sliceisop-2873669.jpg";
+import img9 from "@/assets/pexels-umkreisel-app-2832071.jpg";
+import img10 from "@/assets/pexels-daniel-cid-634838605-17505898.jpg";
+import img11 from "@/assets/pexels-jmueller-6444367.jpg";
+import img12 from "@/assets/pexels-nicole-avagliano-1132392-2706654.jpg";
+import img13 from "@/assets/pexels-scott-lord-564881271-32511120.jpg";
+import img14 from "@/assets/pexels-scott-lord-564881271-30820838.jpg";
+import img15 from "@/assets/pexels-dennisariel-32054508.jpg";
+import img16 from "@/assets/pexels-nivdex-796206.jpg";
+import img17 from "@/assets/pexels-eberhardgross-1624360.jpg";
+import img18 from "@/assets/pexels-merlin-11167645.jpg";
+import img19 from "@/assets/pexels-neilyonamine-8237959.jpg";
+import img20 from "@/assets/pexels-alex-andrews-271121-3805983.jpg";
+import img21 from "@/assets/pexels-pixabay-41951.jpg";
+import img22 from "@/assets/pexels-arnie-chou-304906-1229042.jpg";
+import img23 from "@/assets/pexels-faikackmerd-1025469.jpg";
+import img24 from "@/assets/pexels-eberhardgross-2098427.jpg";
+import img25 from "@/assets/pexels-dennisariel-33263307.jpg";
+import img26 from "@/assets/pexels-necatiomerk-33260303.jpg";
+import img27 from "@/assets/pexels-david-paul-2150063702-33313322.jpg";
 
-export function BackgroundSlideshow() {
-  const [currentImage, setCurrentImage] = useState(0);
-  const [nextImage, setNextImage] = useState(1);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+// Define themed image sets for each track
+const trackImageSets = [
+  // Track 1: "What is Ego Death?" - Dark, cosmic, transformative images
+  [img1, img3, img9, img15, img25, img26, img27, img13],
+  
+  // Track 2: "What is Non-Duality?" - Unity, oneness, cosmic harmony
+  [img2, img4, img10, img16, img17, img24, img22, img23],
+  
+  // Track 3: "The Four Selves with Andrew Cohen" - Layers, depth, transformation
+  [img5, img6, img7, img8, img11, img12, img14, img18],
+  
+  // Track 4: "Realisation and Transformation" - Awakening, light, breakthrough
+  [img19, img20, img21, img1, img3, img9, img15, img25],
+  
+  // Track 5: "The Evolution of Nonduality" - Evolution, growth, cosmic development
+  [img26, img27, img13, img2, img4, img10, img16, img17],
+  
+  // Track 6: "The Edge of Evolution" - Cutting edge, advanced consciousness
+  [img24, img22, img23, img5, img6, img7, img8, img11],
+  
+  // Track 7: "Realigning the Soul" - Alignment, harmony, soul connection
+  [img12, img14, img18, img19, img20, img21, img1, img3],
+  
+  // Track 8: "Rational Idealism" - Balance of mind and spirit
+  [img9, img15, img25, img26, img27, img13, img2, img4]
+];
+
+interface BackgroundSlideshowProps {
+  trackIndex: number;
+}
+
+export function BackgroundSlideshow({ trackIndex }: BackgroundSlideshowProps) {
+  const [currentImages, setCurrentImages] = useState<string[]>([]);
+
+  // Get the image set for the current track
+  const images = trackImageSets[trackIndex] || trackImageSets[0];
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setIsTransitioning(true);
-      
-      setTimeout(() => {
-        setCurrentImage(nextImage);
-        setNextImage((nextImage + 1) % images.length);
-        setIsTransitioning(false);
-      }, 2000); // Match transition duration
-      
-    }, 8000); // Change image every 8 seconds
-
-    return () => clearInterval(interval);
-  }, [nextImage]);
+    setCurrentImages(images);
+  }, [trackIndex, images]);
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {/* Current Background Image */}
-      <div className="absolute inset-0">
-        <img
-          src={images[currentImage]}
-          alt={`Background ${currentImage + 1}`}
-          className="w-full h-full object-cover"
-        />
-      </div>
-
-      {/* Next Background Image (for crossfade) */}
-      <div 
-        className={`absolute inset-0 transition-opacity duration-[2000ms] ease-in-out ${
-          isTransitioning ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        <img
-          src={images[nextImage]}
-          alt={`Background ${nextImage + 1}`}
-          className="w-full h-full object-cover"
-        />
+      {/* CSS Animated Slideshow Container */}
+      <div className="fling-minislide">
+        {currentImages.map((image, index) => (
+          <img
+            key={`${trackIndex}-${index}`}
+            src={image}
+            alt={`Background ${index + 1}`}
+            style={{
+              animationDelay: `${index * 8}s`,
+            }}
+          />
+        ))}
       </div>
 
       {/* Cosmic Overlay */}
