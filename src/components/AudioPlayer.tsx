@@ -148,7 +148,7 @@ export function AudioPlayer() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [volume, setVolume] = useState(1);
   const [backgroundMusic, setBackgroundMusic] = useState<string | null>(null);
-  const [isBackgroundMusicPlaying, setIsBackgroundMusicPlaying] = useState(false);
+  const [isBackgroundMusicPlaying, setIsBackgroundMusicPlaying] = useState(true);
   const [backgroundMusicVolume, setBackgroundMusicVolume] = useState(0.2);
   const [selectedBackgroundTrack, setSelectedBackgroundTrack] = useState<string | null>(null);
   const [autoActivateBackgroundMusic, setAutoActivateBackgroundMusic] = useState(true);
@@ -189,6 +189,13 @@ export function AudioPlayer() {
       backgroundAudio.pause();
     }
   }, [backgroundMusic, isBackgroundMusicPlaying, volume, backgroundMusicVolume]);
+
+  // Auto-activate default background music for the first track on mount
+  useEffect(() => {
+    if (isBackgroundMusicPlaying && !backgroundMusic) {
+      activateDefaultBackgroundMusic(0);
+    }
+  }, []); // Empty dependency array means this runs once on mount
 
   const togglePlay = () => {
     const audio = audioRef.current;
