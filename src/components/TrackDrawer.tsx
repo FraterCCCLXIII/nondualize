@@ -54,9 +54,10 @@ export function TrackDrawer({
         <div className="w-80 h-full glass-morphism border-r">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-white/10">
-            <h2 className="text-xl font-semibold text-white">
-              Andrew Cohen Talks
-            </h2>
+            <div className="flex flex-col">
+              <span className="text-sm font-light text-white/80">Awakening with</span>
+              <h2 className="text-xl font-semibold text-white">Andrew Cohen</h2>
+            </div>
             <Button
               variant="ghost"
               size="icon"
