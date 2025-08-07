@@ -548,17 +548,19 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                 </Button>
               </PopoverTrigger>
 
-            {/* Caption Control */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleCaptions}
-              className={`text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 ${
-                isCaptionsActive ? 'text-[hsl(var(--accent))]' : ''
-              }`}
-            >
-              <Subtitles className="h-5 w-5" />
-            </Button>
+            {/* Caption Control - Only show if captions are available */}
+            {captions.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleCaptions}
+                className={`text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 ${
+                  isCaptionsActive ? 'text-[hsl(var(--accent))]' : ''
+                }`}
+              >
+                <Subtitles className="h-5 w-5" />
+              </Button>
+            )}
 
             {/* Share Control */}
             <Button
