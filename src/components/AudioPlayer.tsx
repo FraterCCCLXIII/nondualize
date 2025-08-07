@@ -16,38 +16,59 @@ interface Track {
 const mockTracks: Track[] = [
   {
     id: "1",
-    title: "The Pathless Path",
-    description: "A journey into the depths of consciousness and awakening",
-    duration: 1847, // 30:47
-    audioUrl: "/api/placeholder-audio"
+    title: "What is Ego Death?",
+    description: "Exploring the profound dissolution of the separate self and the awakening to true consciousness",
+    duration: 3900, // ~65 minutes
+    audioUrl: "/audio/What is Ego Death-.mp3"
   },
   {
     id: "2", 
-    title: "Beyond the Self",
-    description: "Exploring the nature of identity and transcendence",
-    duration: 2156, // 35:56
-    audioUrl: "/api/placeholder-audio"
+    title: "What is Non-Duality?",
+    description: "Understanding the fundamental unity of existence beyond the illusion of separation",
+    duration: 4140, // ~69 minutes
+    audioUrl: "/audio/What is Non-Duality-.mp3"
   },
   {
     id: "3",
-    title: "Evolutionary Enlightenment",
-    description: "The next step in human consciousness development",
-    duration: 2890, // 48:10
-    audioUrl: "/api/placeholder-audio"
+    title: "The Four Selves with Andrew Cohen",
+    description: "A deep exploration of the different levels of self and their transformation through spiritual practice",
+    duration: 4740, // ~79 minutes
+    audioUrl: "/audio/The Four Selves with Andrew Cohen.mp3"
   },
   {
     id: "4",
-    title: "The Miracle of Awakening",
-    description: "Understanding the profound shift in perspective",
-    duration: 1623, // 27:03
-    audioUrl: "/api/placeholder-audio"
+    title: "Realisation and Transformation",
+    description: "The journey from intellectual understanding to embodied awakening and lasting change",
+    duration: 5640, // ~94 minutes
+    audioUrl: "/audio/Realisation and Transformation.mp3"
   },
   {
     id: "5",
-    title: "Cosmic Consciousness",
-    description: "Experiencing unity with the infinite",
-    duration: 2344, // 39:04
-    audioUrl: "/api/placeholder-audio"
+    title: "The Evolution of Nonduality",
+    description: "How the understanding of oneness evolves and deepens through practice and insight",
+    duration: 5880, // ~98 minutes
+    audioUrl: "/audio/The Evolution of Nonduality.mp3"
+  },
+  {
+    id: "6",
+    title: "The Edge of Evolution",
+    description: "Exploring the cutting edge of human consciousness and spiritual development",
+    duration: 4080, // ~68 minutes
+    audioUrl: "/audio/The Edge of Evolution.mp3"
+  },
+  {
+    id: "7",
+    title: "Realigning the Soul",
+    description: "The process of aligning our deepest essence with the highest truth and purpose",
+    duration: 4680, // ~78 minutes
+    audioUrl: "/audio/Realigning the Soul.mp3"
+  },
+  {
+    id: "8",
+    title: "Rational Idealism",
+    description: "Bridging the gap between intellectual understanding and spiritual realization",
+    duration: 3420, // ~57 minutes
+    audioUrl: "/audio/Rational Idealism.mp3"
   }
 ];
 
@@ -114,6 +135,17 @@ export function AudioPlayer() {
     setCurrentTrack(trackIndex);
     setCurrentTime(0);
     setIsDrawerOpen(false);
+    
+    // Auto-play the selected track
+    setTimeout(() => {
+      const audio = audioRef.current;
+      if (audio) {
+        audio.play().catch((error) => {
+          console.log('Auto-play prevented by browser:', error);
+        });
+        setIsPlaying(true);
+      }
+    }, 100); // Small delay to ensure audio element is updated
   };
 
   const formatTime = (seconds: number) => {
@@ -125,7 +157,7 @@ export function AudioPlayer() {
   return (
     <div className="relative h-screen w-full overflow-hidden">
       {/* Background Slideshow */}
-      <BackgroundSlideshow />
+      <BackgroundSlideshow trackIndex={currentTrack} />
 
       {/* Menu Button */}
       <Button

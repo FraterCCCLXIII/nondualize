@@ -159,4 +159,44 @@ All colors MUST be HSL.
     transform: scale(0.95);
     transition: opacity 2s ease-in-out, transform 2s ease-in-out;
   }
+
+  /* CSS Animated Slideshow */
+  .fling-minislide {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    background-color: transparent;
+  }
+
+  .fling-minislide img {
+    position: absolute;
+    animation: fling-minislide 32s infinite, zoom-in 32s infinite;
+    opacity: 0;
+    object-fit: cover;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  @keyframes fling-minislide {
+    28% { opacity: 1; }
+    32% { opacity: 0; }
+  }
+
+  .fling-minislide img:nth-child(4) { animation-delay: 0s; }
+  .fling-minislide img:nth-child(3) { animation-delay: 8s; }
+  .fling-minislide img:nth-child(2) { animation-delay: 16s; }
+  .fling-minislide img:nth-child(1) { animation-delay: 24s; }
+
+  @keyframes zoom-in {
+    0% {
+      transform: scale(1) translateY(0);
+      transform-origin: 50% 84%;
+    }
+    100% {
+      transform: scale(1.5) translateY(15px);
+      transform-origin: center;
+    }
+  }
 }
