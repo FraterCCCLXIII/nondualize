@@ -58,9 +58,10 @@ const trackImageSets = [
 
 interface BackgroundSlideshowProps {
   trackIndex: number;
+  isTransitioning?: boolean;
 }
 
-export function BackgroundSlideshow({ trackIndex }: BackgroundSlideshowProps) {
+export function BackgroundSlideshow({ trackIndex, isTransitioning = false }: BackgroundSlideshowProps) {
   const [currentImages, setCurrentImages] = useState<string[]>([]);
 
   // Get the image set for the current track
@@ -73,7 +74,7 @@ export function BackgroundSlideshow({ trackIndex }: BackgroundSlideshowProps) {
   return (
     <div className="absolute inset-0 overflow-hidden">
       {/* CSS Animated Slideshow Container */}
-      <div className="fling-minislide">
+      <div className={`fling-minislide transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
         {currentImages.map((image, index) => (
           <img
             key={`${trackIndex}-${index}`}

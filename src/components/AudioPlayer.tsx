@@ -152,6 +152,7 @@ export function AudioPlayer() {
   const [backgroundMusicVolume, setBackgroundMusicVolume] = useState(0.2);
   const [selectedBackgroundTrack, setSelectedBackgroundTrack] = useState<string | null>(null);
   const [autoActivateBackgroundMusic, setAutoActivateBackgroundMusic] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const backgroundAudioRef = useRef<HTMLAudioElement>(null);
 
@@ -203,32 +204,93 @@ export function AudioPlayer() {
 
     if (isPlaying) {
       audio.pause();
+      
+      // Pause background music if it's active
+      if (backgroundAudioRef.current && isBackgroundMusicPlaying) {
+        backgroundAudioRef.current.pause();
+      }
     } else {
       audio.play();
+      
+      // If background music is enabled and should be active, activate the default background music
+      if (isBackgroundMusicPlaying && autoActivateBackgroundMusic && !backgroundAudioRef.current?.src) {
+        activateDefaultBackgroundMusic(currentTrack);
+      }
+      
+      // If background music is set but not playing, try to start it now (user interaction allows it)
+      if (backgroundMusic && isBackgroundMusicPlaying && backgroundAudioRef.current) {
+        backgroundAudioRef.current.play().catch((error) => {
+          console.log('Background music play failed:', error);
+        });
+      }
     }
     setIsPlaying(!isPlaying);
   };
 
   const handlePrevious = () => {
     const newTrackIndex = currentTrack === 0 ? mockTracks.length - 1 : currentTrack - 1;
-    setCurrentTrack(newTrackIndex);
-    setCurrentTime(0);
     
-    // Activate default background music if background music is currently playing
-    if (isBackgroundMusicPlaying) {
-      activateDefaultBackgroundMusic(newTrackIndex);
-    }
+    // Start fade out transition
+    setIsTransitioning(true);
+    
+    setTimeout(() => {
+      setCurrentTrack(newTrackIndex);
+      setCurrentTime(0);
+      
+      // Activate default background music if background music is currently playing
+      if (isBackgroundMusicPlaying) {
+        activateDefaultBackgroundMusic(newTrackIndex);
+      }
+      
+      // Auto-start the audio
+      setTimeout(() => {
+        const audio = audioRef.current;
+        if (audio) {
+          audio.play().catch((error) => {
+            console.log('Auto-play prevented by browser:', error);
+          });
+          setIsPlaying(true);
+        }
+      }, 100);
+      
+      // Fade in transition
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 50);
+    }, 300); // Fade out duration
   };
 
   const handleNext = () => {
     const newTrackIndex = currentTrack === mockTracks.length - 1 ? 0 : currentTrack + 1;
-    setCurrentTrack(newTrackIndex);
-    setCurrentTime(0);
     
-    // Activate default background music if background music is currently playing
-    if (isBackgroundMusicPlaying) {
-      activateDefaultBackgroundMusic(newTrackIndex);
-    }
+    // Start fade out transition
+    setIsTransitioning(true);
+    
+    setTimeout(() => {
+      setCurrentTrack(newTrackIndex);
+      setCurrentTime(0);
+      
+      // Activate default background music if background music is currently playing
+      if (isBackgroundMusicPlaying) {
+        activateDefaultBackgroundMusic(newTrackIndex);
+      }
+      
+      // Auto-start the audio
+      setTimeout(() => {
+        const audio = audioRef.current;
+        if (audio) {
+          audio.play().catch((error) => {
+            console.log('Auto-play prevented by browser:', error);
+          });
+          setIsPlaying(true);
+        }
+      }, 100);
+      
+      // Fade in transition
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 50);
+    }, 300); // Fade out duration
   };
 
   const handleSeek = (value: number[]) => {
@@ -242,6 +304,7 @@ export function AudioPlayer() {
 
   const activateDefaultBackgroundMusic = (trackIndex: number) => {
     const track = mockTracks[trackIndex];
+    
     if (track.defaultBackgroundMusic && autoActivateBackgroundMusic) {
       const bgTrack = backgroundMusicTracks.find(bg => bg.id === track.defaultBackgroundMusic);
       if (bgTrack) {
@@ -324,7 +387,7 @@ export function AudioPlayer() {
   return (
     <div className="relative h-screen w-full overflow-hidden">
       {/* Background Slideshow */}
-      <BackgroundSlideshow trackIndex={currentTrack} />
+      <BackgroundSlideshow trackIndex={currentTrack} isTransitioning={isTransitioning} />
 
       {/* Main Title */}
       <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-40 text-center">
@@ -371,7 +434,7 @@ export function AudioPlayer() {
       <div className="absolute bottom-0 left-0 right-0 p-6">
         <div className="rounded-xl p-4 max-w-2xl">
           {/* Track Info */}
-          <div className="mb-4">
+          <div className={`mb-4 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
             <h2 className="text-xl font-semibold text-white mb-1">
               {track.title}
             </h2>
