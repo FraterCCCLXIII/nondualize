@@ -214,33 +214,62 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   useEffect(() => {
     const loadCaptions = async () => {
       try {
+        console.log(`Attempting to load captions for track ${currentTrack + 1}...`);
+        
         // Try JSON format first
         const jsonResponse = await fetch(`/transcripts/track-${currentTrack + 1}-captions.json`);
+        console.log(`JSON response status: ${jsonResponse.status}`);
         if (jsonResponse.ok) {
-          const captionData = await jsonResponse.json();
-          setCaptions(captionData);
-          return;
+          try {
+            const captionData = await jsonResponse.json();
+            // Check if the response is actually JSON (not HTML from 404)
+            if (Array.isArray(captionData)) {
+              console.log(`Loaded ${captionData.length} captions from JSON for track ${currentTrack + 1}`);
+              setCaptions(captionData);
+              return;
+            }
+          } catch (e) {
+            console.log('JSON parsing failed (likely HTML 404 page)');
+          }
         }
         
         // Try SRT format if JSON not found
+        console.log(`Attempting to load SRT for track ${currentTrack + 1}...`);
         const srtResponse = await fetch(`/transcripts/track-${currentTrack + 1}-captions.srt`);
+        console.log(`SRT response status: ${srtResponse.status}`);
         if (srtResponse.ok) {
           const srtContent = await srtResponse.text();
-          const captionData = parseSrtFile(srtContent);
-          setCaptions(captionData);
-          return;
+          console.log(`SRT content length: ${srtContent.length}`);
+          // Check if the response is actually SRT content (not HTML from 404)
+          if (srtContent.includes('-->') && !srtContent.includes('<!DOCTYPE')) {
+            const captionData = parseSrtFile(srtContent);
+            console.log(`Loaded ${captionData.length} captions from SRT for track ${currentTrack + 1}`);
+            setCaptions(captionData);
+            return;
+          } else {
+            console.log('SRT content validation failed - contains HTML or missing timestamps');
+          }
+        } else {
+          console.log(`SRT fetch failed with status: ${srtResponse.status}`);
         }
         
         // No captions found
+        console.log(`No captions found for track ${currentTrack + 1}`);
         setCaptions([]);
       } catch (error) {
         console.log('No captions available for this track');
+        console.error('Caption loading error:', error);
         setCaptions([]);
       }
     };
 
     loadCaptions();
   }, [currentTrack]);
+
+  // Debug captions state
+  useEffect(() => {
+    console.log(`Track ${currentTrack + 1}: captions.length = ${captions.length}`);
+  }, [captions, currentTrack]);
 
   const togglePlay = () => {
     const audio = audioRef.current;
