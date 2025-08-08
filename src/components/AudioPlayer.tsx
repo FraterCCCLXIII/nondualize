@@ -1,10 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { Play, Pause, SkipBack, SkipForward, Menu, Volume2, Music, Square } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Menu, Volume2, Music, Square, Subtitles, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { TrackDrawer } from "./TrackDrawer";
 import { BackgroundSlideshow } from "./BackgroundSlideshow";
+import { CaptionOverlay } from "./CaptionOverlay";
+import { ShareModal } from "./ShareModal";
+import { parseSrtFile, type Caption } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface Track {
   id: string;
@@ -14,6 +18,8 @@ interface Track {
   audioUrl: string;
   defaultBackgroundMusic?: string; // ID of the default background music track
 }
+
+
 
 const mockTracks: Track[] = [
   {
@@ -140,9 +146,14 @@ const backgroundMusicTracks = [
   }
 ];
 
-export function AudioPlayer() {
+interface AudioPlayerProps {
+  initialTrackIndex?: number;
+}
+
+export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
+  const navigate = useNavigate();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState(0);
+  const [currentTrack, setCurrentTrack] = useState(initialTrackIndex);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -153,6 +164,9 @@ export function AudioPlayer() {
   const [selectedBackgroundTrack, setSelectedBackgroundTrack] = useState<string | null>(null);
   const [autoActivateBackgroundMusic, setAutoActivateBackgroundMusic] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isCaptionsActive, setIsCaptionsActive] = useState(false);
+  const [captions, setCaptions] = useState<Caption[]>([]);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const backgroundAudioRef = useRef<HTMLAudioElement>(null);
 
@@ -198,6 +212,56 @@ export function AudioPlayer() {
     }
   }, []); // Empty dependency array means this runs once on mount
 
+  // Load captions for the current track
+  useEffect(() => {
+    const loadCaptions = async () => {
+      try {
+        // Try JSON format first
+        const jsonResponse = await fetch(`/transcripts/track-${currentTrack + 1}-captions.json`);
+        if (jsonResponse.ok) {
+          try {
+            const captionData = await jsonResponse.json();
+            // Check if the response is actually JSON (not HTML from 404)
+            if (Array.isArray(captionData)) {
+              setCaptions(captionData);
+              return;
+            }
+          } catch (e) {
+            // JSON parsing failed (likely HTML 404 page)
+          }
+        }
+        
+        // Try SRT format if JSON not found
+        const srtResponse = await fetch(`/transcripts/track-${currentTrack + 1}-captions.srt`);
+        if (srtResponse.ok) {
+          const srtContent = await srtResponse.text();
+          // Check if the response is actually SRT content (not HTML from 404)
+          if (srtContent.includes('-->') && !srtContent.includes('<!DOCTYPE')) {
+            const captionData = parseSrtFile(srtContent);
+            setCaptions(captionData);
+            return;
+          }
+        }
+        
+        // No captions found
+        setCaptions([]);
+      } catch (error) {
+        setCaptions([]);
+      }
+    };
+
+    loadCaptions();
+  }, [currentTrack]);
+
+
+
+  // Update URL on initial load if we have an initial track index
+  useEffect(() => {
+    if (initialTrackIndex > 0) {
+      updateTrackUrl(initialTrackIndex);
+    }
+  }, [initialTrackIndex]);
+
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -213,7 +277,7 @@ export function AudioPlayer() {
       audio.play();
       
       // If background music is enabled and should be active, activate the default background music
-      if (isBackgroundMusicPlaying && autoActivateBackgroundMusic && !backgroundAudioRef.current?.src) {
+      if (isBackgroundMusicPlaying && autoActivateBackgroundMusic && !backgroundMusic) {
         activateDefaultBackgroundMusic(currentTrack);
       }
       
@@ -229,68 +293,26 @@ export function AudioPlayer() {
 
   const handlePrevious = () => {
     const newTrackIndex = currentTrack === 0 ? mockTracks.length - 1 : currentTrack - 1;
+    setCurrentTrack(newTrackIndex);
+    setCurrentTime(0);
+    updateTrackUrl(newTrackIndex);
     
-    // Start fade out transition
-    setIsTransitioning(true);
-    
-    setTimeout(() => {
-      setCurrentTrack(newTrackIndex);
-      setCurrentTime(0);
-      
-      // Activate default background music if background music is currently playing
-      if (isBackgroundMusicPlaying) {
-        activateDefaultBackgroundMusic(newTrackIndex);
-      }
-      
-      // Auto-start the audio
-      setTimeout(() => {
-        const audio = audioRef.current;
-        if (audio) {
-          audio.play().catch((error) => {
-            console.log('Auto-play prevented by browser:', error);
-          });
-          setIsPlaying(true);
-        }
-      }, 100);
-      
-      // Fade in transition
-      setTimeout(() => {
-        setIsTransitioning(false);
-      }, 50);
-    }, 300); // Fade out duration
+    // Activate default background music if background music is currently playing
+    if (isBackgroundMusicPlaying) {
+      activateDefaultBackgroundMusic(newTrackIndex);
+    }
   };
 
   const handleNext = () => {
     const newTrackIndex = currentTrack === mockTracks.length - 1 ? 0 : currentTrack + 1;
+    setCurrentTrack(newTrackIndex);
+    setCurrentTime(0);
+    updateTrackUrl(newTrackIndex);
     
-    // Start fade out transition
-    setIsTransitioning(true);
-    
-    setTimeout(() => {
-      setCurrentTrack(newTrackIndex);
-      setCurrentTime(0);
-      
-      // Activate default background music if background music is currently playing
-      if (isBackgroundMusicPlaying) {
-        activateDefaultBackgroundMusic(newTrackIndex);
-      }
-      
-      // Auto-start the audio
-      setTimeout(() => {
-        const audio = audioRef.current;
-        if (audio) {
-          audio.play().catch((error) => {
-            console.log('Auto-play prevented by browser:', error);
-          });
-          setIsPlaying(true);
-        }
-      }, 100);
-      
-      // Fade in transition
-      setTimeout(() => {
-        setIsTransitioning(false);
-      }, 50);
-    }, 300); // Fade out duration
+    // Activate default background music if background music is currently playing
+    if (isBackgroundMusicPlaying) {
+      activateDefaultBackgroundMusic(newTrackIndex);
+    }
   };
 
   const handleSeek = (value: number[]) => {
@@ -319,6 +341,7 @@ export function AudioPlayer() {
     setCurrentTrack(trackIndex);
     setCurrentTime(0);
     setIsDrawerOpen(false);
+    updateTrackUrl(trackIndex);
     
     // Auto-play the selected track
     setTimeout(() => {
@@ -384,10 +407,41 @@ export function AudioPlayer() {
     }
   };
 
+  const toggleCaptions = () => {
+    setIsCaptionsActive(!isCaptionsActive);
+  };
+
+  const getTrackSlug = (trackIndex: number) => {
+    const trackSlugs = [
+      "what-is-ego-death",
+      "what-is-non-duality", 
+      "the-four-selves",
+      "realisation-and-transformation",
+      "the-evolution-of-nonduality",
+      "the-edge-of-evolution",
+      "realigning-the-soul",
+      "rational-idealism"
+    ];
+    return trackSlugs[trackIndex] || "what-is-ego-death";
+  };
+
+  // Update URL when track changes
+  const updateTrackUrl = (trackIndex: number) => {
+    const slug = getTrackSlug(trackIndex);
+    navigate(`/track/${slug}`, { replace: true });
+  };
+
   return (
     <div className="relative h-screen w-full overflow-hidden">
       {/* Background Slideshow */}
       <BackgroundSlideshow trackIndex={currentTrack} isTransitioning={isTransitioning} />
+
+      {/* Caption Overlay */}
+      <CaptionOverlay 
+        isActive={isCaptionsActive}
+        currentTime={currentTime}
+        captions={captions}
+      />
 
       {/* Main Title */}
       <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-40 text-center">
@@ -532,6 +586,30 @@ export function AudioPlayer() {
                   <Music className="h-5 w-5" />
                 </Button>
               </PopoverTrigger>
+
+            {/* Caption Control - Only show if captions are available */}
+            {captions.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleCaptions}
+                className={`text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 ${
+                  isCaptionsActive ? 'text-[hsl(var(--accent))]' : ''
+                }`}
+              >
+                <Subtitles className="h-5 w-5" />
+              </Button>
+            )}
+
+            {/* Share Control */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsShareModalOpen(true)}
+              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10"
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
               <PopoverContent className="w-64 p-4 glass-morphism border-white/20">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -598,6 +676,14 @@ export function AudioPlayer() {
           </div>
         </div>
       </div>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        trackTitle={track.title}
+        trackSlug={getTrackSlug(currentTrack)}
+      />
     </div>
   );
 }
