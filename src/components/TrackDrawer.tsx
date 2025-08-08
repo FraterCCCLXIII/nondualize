@@ -1,4 +1,4 @@
-import { X, Play } from "lucide-react";
+import { X, Play, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -29,6 +29,37 @@ export function TrackDrawer({
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getTrackSlug = (trackIndex: number) => {
+    const trackSlugs = [
+      "what-is-ego-death",
+      "what-is-non-duality", 
+      "the-four-selves",
+      "realisation-and-transformation",
+      "the-evolution-of-nonduality",
+      "the-edge-of-evolution",
+      "realigning-the-soul",
+      "rational-idealism"
+    ];
+    return trackSlugs[trackIndex] || "what-is-ego-death";
+  };
+
+  const handleShare = (trackIndex: number, trackTitle: string) => {
+    const trackSlug = getTrackSlug(trackIndex);
+    const trackUrl = `${window.location.origin}/track/${trackSlug}`;
+    const text = `Listen to "${trackTitle}" with Andrew Cohen`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: trackTitle,
+        text: text,
+        url: trackUrl,
+      });
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(trackUrl);
+    }
   };
 
   return (
@@ -107,11 +138,24 @@ export function TrackDrawer({
                         <span className="text-xs text-white/40">
                           Duration: {formatDuration(track.duration)}
                         </span>
-                        {index === currentTrack && (
-                          <span className="text-xs text-[hsl(var(--primary))] font-medium">
-                            Playing
-                          </span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {index === currentTrack && (
+                            <span className="text-xs text-[hsl(var(--primary))] font-medium">
+                              Playing
+                            </span>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleShare(index, track.title);
+                            }}
+                            className="w-6 h-6 opacity-0 group-hover:opacity-100 text-white/60 hover:text-white hover:bg-white/10 transition-opacity"
+                          >
+                            <Share2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
