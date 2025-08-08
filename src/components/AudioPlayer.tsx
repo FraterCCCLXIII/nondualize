@@ -8,6 +8,7 @@ import { BackgroundSlideshow } from "./BackgroundSlideshow";
 import { CaptionOverlay } from "./CaptionOverlay";
 import { ShareModal } from "./ShareModal";
 import { parseSrtFile, type Caption } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface Track {
   id: string;
@@ -150,6 +151,7 @@ interface AudioPlayerProps {
 }
 
 export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
+  const navigate = useNavigate();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState(initialTrackIndex);
   const [currentTime, setCurrentTime] = useState(0);
@@ -214,51 +216,36 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   useEffect(() => {
     const loadCaptions = async () => {
       try {
-        console.log(`Attempting to load captions for track ${currentTrack + 1}...`);
-        
         // Try JSON format first
         const jsonResponse = await fetch(`/transcripts/track-${currentTrack + 1}-captions.json`);
-        console.log(`JSON response status: ${jsonResponse.status}`);
         if (jsonResponse.ok) {
           try {
             const captionData = await jsonResponse.json();
             // Check if the response is actually JSON (not HTML from 404)
             if (Array.isArray(captionData)) {
-              console.log(`Loaded ${captionData.length} captions from JSON for track ${currentTrack + 1}`);
               setCaptions(captionData);
               return;
             }
           } catch (e) {
-            console.log('JSON parsing failed (likely HTML 404 page)');
+            // JSON parsing failed (likely HTML 404 page)
           }
         }
         
         // Try SRT format if JSON not found
-        console.log(`Attempting to load SRT for track ${currentTrack + 1}...`);
         const srtResponse = await fetch(`/transcripts/track-${currentTrack + 1}-captions.srt`);
-        console.log(`SRT response status: ${srtResponse.status}`);
         if (srtResponse.ok) {
           const srtContent = await srtResponse.text();
-          console.log(`SRT content length: ${srtContent.length}`);
           // Check if the response is actually SRT content (not HTML from 404)
           if (srtContent.includes('-->') && !srtContent.includes('<!DOCTYPE')) {
             const captionData = parseSrtFile(srtContent);
-            console.log(`Loaded ${captionData.length} captions from SRT for track ${currentTrack + 1}`);
             setCaptions(captionData);
             return;
-          } else {
-            console.log('SRT content validation failed - contains HTML or missing timestamps');
           }
-        } else {
-          console.log(`SRT fetch failed with status: ${srtResponse.status}`);
         }
         
         // No captions found
-        console.log(`No captions found for track ${currentTrack + 1}`);
         setCaptions([]);
       } catch (error) {
-        console.log('No captions available for this track');
-        console.error('Caption loading error:', error);
         setCaptions([]);
       }
     };
@@ -266,10 +253,14 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     loadCaptions();
   }, [currentTrack]);
 
-  // Debug captions state
+
+
+  // Update URL on initial load if we have an initial track index
   useEffect(() => {
-    console.log(`Track ${currentTrack + 1}: captions.length = ${captions.length}`);
-  }, [captions, currentTrack]);
+    if (initialTrackIndex > 0) {
+      updateTrackUrl(initialTrackIndex);
+    }
+  }, [initialTrackIndex]);
 
   const togglePlay = () => {
     const audio = audioRef.current;
@@ -304,6 +295,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     const newTrackIndex = currentTrack === 0 ? mockTracks.length - 1 : currentTrack - 1;
     setCurrentTrack(newTrackIndex);
     setCurrentTime(0);
+    updateTrackUrl(newTrackIndex);
     
     // Activate default background music if background music is currently playing
     if (isBackgroundMusicPlaying) {
@@ -315,6 +307,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     const newTrackIndex = currentTrack === mockTracks.length - 1 ? 0 : currentTrack + 1;
     setCurrentTrack(newTrackIndex);
     setCurrentTime(0);
+    updateTrackUrl(newTrackIndex);
     
     // Activate default background music if background music is currently playing
     if (isBackgroundMusicPlaying) {
@@ -347,6 +340,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     setCurrentTrack(trackIndex);
     setCurrentTime(0);
     setIsDrawerOpen(false);
+    updateTrackUrl(trackIndex);
     
     // Auto-play the selected track
     setTimeout(() => {
@@ -428,6 +422,12 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       "rational-idealism"
     ];
     return trackSlugs[trackIndex] || "what-is-ego-death";
+  };
+
+  // Update URL when track changes
+  const updateTrackUrl = (trackIndex: number) => {
+    const slug = getTrackSlug(trackIndex);
+    navigate(`/track/${slug}`, { replace: true });
   };
 
   return (
