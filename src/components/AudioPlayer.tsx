@@ -443,13 +443,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         captions={captions}
       />
 
-      {/* Main Title */}
-      <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-40 text-center">
-        <div className="flex flex-col items-center">
-          <h1 className="text-4xl font-light text-white mb-1 font-cinzel">Awakening</h1>
-          <span className="text-lg font-light text-white/80">with Andrew Cohen</span>
-        </div>
-      </div>
+
 
       {/* Menu Button */}
       <Button

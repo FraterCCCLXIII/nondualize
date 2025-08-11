@@ -1,6 +1,8 @@
 import { X, Play, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState, useEffect } from "react";
+import { NavigationModal } from "./NavigationModal";
 
 interface Track {
   id: string;
@@ -25,6 +27,9 @@ export function TrackDrawer({
   currentTrack,
   onTrackSelect
 }: TrackDrawerProps) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [currentPageSlug, setCurrentPageSlug] = useState("");
+
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -61,6 +66,37 @@ export function TrackDrawer({
       navigator.clipboard.writeText(trackUrl);
     }
   };
+
+
+
+  const navigationLinks = [
+    { name: "Life", slug: "life" },
+    { name: "Teachings", slug: "teachings" },
+    { name: "Books", slug: "books" },
+    { name: "Archive", slug: "archive" },
+    { name: "Engage", slug: "engage" },
+    { name: "Donate", slug: "donate" },
+  ];
+
+  const handleNavigationClick = (slug: string) => {
+    setCurrentPageSlug(slug);
+    setModalOpen(true);
+  };
+
+  // Listen for custom events to open modals from URL navigation
+  useEffect(() => {
+    const handleOpenModal = (event: CustomEvent) => {
+      const { pageSlug } = event.detail;
+      setCurrentPageSlug(pageSlug);
+      setModalOpen(true);
+    };
+
+    window.addEventListener('openNavigationModal', handleOpenModal as EventListener);
+    
+    return () => {
+      window.removeEventListener('openNavigationModal', handleOpenModal as EventListener);
+    };
+  }, []);
 
   return (
     <>
@@ -99,8 +135,23 @@ export function TrackDrawer({
             </Button>
           </div>
 
+          {/* Navigation Links */}
+          <div className="p-6 border-b border-white/10">
+            <nav className="space-y-3">
+              {navigationLinks.map((link) => (
+                <button
+                  key={link.name}
+                  onClick={() => handleNavigationClick(link.slug)}
+                  className="block w-full text-left text-white/70 hover:text-white transition-colors duration-200 font-medium text-sm"
+                >
+                  {link.name}
+                </button>
+              ))}
+            </nav>
+          </div>
+
           {/* Track List */}
-          <ScrollArea className="h-[calc(100vh-88px)]">
+          <ScrollArea className="h-[calc(100vh-200px)]">
             <div className="p-4">
               {tracks.map((track, index) => (
                 <div
@@ -165,6 +216,13 @@ export function TrackDrawer({
           </ScrollArea>
         </div>
       </div>
+
+      {/* Navigation Modal */}
+      <NavigationModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        pageSlug={currentPageSlug}
+      />
     </>
   );
 }

@@ -1,6 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import EncapsulatedAudioPlayer from "@/components/EncapsulatedAudioPlayer";
-import Navigation from "@/components/Navigation";
+import { AudioPlayer } from "@/components/AudioPlayer";
 
 export function TrackPage() {
   const { trackSlug } = useParams();
@@ -30,13 +29,8 @@ export function TrackPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <Navigation />
-      <div className="pt-16">
-        <div className="h-screen w-full">
-          <EncapsulatedAudioPlayer initialTrackIndex={trackIndex} />
-        </div>
-      </div>
+    <div className="h-screen w-full">
+      <AudioPlayer initialTrackIndex={trackIndex} />
     </div>
   );
 } 
