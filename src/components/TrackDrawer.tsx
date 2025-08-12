@@ -75,7 +75,7 @@ export function TrackDrawer({
     { name: "Books", slug: "books" },
     { name: "Archive", slug: "archive" },
     { name: "Engage", slug: "engage" },
-    { name: "Donate", slug: "donate" },
+    { name: "In Memory", slug: "in-memory" },
   ];
 
   const handleNavigationClick = (slug: string) => {
@@ -168,13 +168,9 @@ export function TrackDrawer({
                       {index === currentTrack ? (
                         <div className="w-2 h-2 rounded-full bg-[hsl(var(--primary))] animate-pulse" />
                       ) : (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="w-8 h-8 opacity-0 group-hover:opacity-100 text-white hover:bg-white/10 transition-opacity"
-                        >
-                          <Play className="h-4 w-4" />
-                        </Button>
+                        <div className="w-8 h-8 flex items-center justify-center">
+                          <Play className="h-4 w-4 text-white/60 group-hover:text-white transition-colors" />
+                        </div>
                       )}
                     </div>
 
@@ -190,9 +186,13 @@ export function TrackDrawer({
                           Duration: {formatDuration(track.duration)}
                         </span>
                         <div className="flex items-center gap-2">
-                          {index === currentTrack && (
+                          {index === currentTrack ? (
                             <span className="text-xs text-[hsl(var(--primary))] font-medium">
                               Playing
+                            </span>
+                          ) : (
+                            <span className="text-xs text-white/40 group-hover:text-white/60 transition-colors">
+                              Click to play
                             </span>
                           )}
                           <Button

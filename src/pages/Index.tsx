@@ -1,11 +1,9 @@
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { InMemoryModal } from "@/components/InMemoryModal";
+import { useEffect } from "react";
 
 const Index = () => {
   const location = useLocation();
-  const [showInMemoryModal, setShowInMemoryModal] = useState(true);
   
   useEffect(() => {
     // Check if we're on a modal route and open the corresponding modal
@@ -25,10 +23,6 @@ const Index = () => {
   return (
     <>
       <AudioPlayer />
-      <InMemoryModal 
-        isOpen={showInMemoryModal} 
-        onClose={() => setShowInMemoryModal(false)} 
-      />
     </>
   );
 };
