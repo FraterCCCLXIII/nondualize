@@ -20,11 +20,7 @@ const Index = () => {
     }
   }, [location.pathname]);
 
-  return (
-    <>
-      <AudioPlayer />
-    </>
-  );
+  return <AudioPlayer />;
 };
 
 export default Index;

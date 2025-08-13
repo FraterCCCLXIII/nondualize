@@ -63,37 +63,18 @@ interface BackgroundSlideshowProps {
 
 export function BackgroundSlideshow({ trackIndex, isTransitioning = false }: BackgroundSlideshowProps) {
   const [currentImages, setCurrentImages] = useState<string[]>([]);
-  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   // Get the image set for the current track
   const images = trackImageSets[trackIndex] || trackImageSets[0];
 
   useEffect(() => {
     setCurrentImages(images);
-    setImagesLoaded(false);
-    
-    // Preload images for smooth transitions
-    const preloadImages = async () => {
-      const imagePromises = images.map((src) => {
-        return new Promise((resolve) => {
-          const img = new Image();
-          img.onload = () => resolve(src);
-          img.onerror = () => resolve(src); // Continue even if some images fail
-          img.src = src;
-        });
-      });
-      
-      await Promise.all(imagePromises);
-      setImagesLoaded(true);
-    };
-    
-    preloadImages();
   }, [trackIndex, images]);
 
   return (
     <div className="absolute inset-0 overflow-hidden">
       {/* CSS Animated Slideshow Container */}
-      <div className={`fling-minislide transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'} ${imagesLoaded ? 'images-ready' : ''}`}>
+      <div className={`fling-minislide transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
         {currentImages.map((image, index) => (
           <img
             key={`${trackIndex}-${index}`}
@@ -102,7 +83,6 @@ export function BackgroundSlideshow({ trackIndex, isTransitioning = false }: Bac
             style={{
               animationDelay: `${index * 8}s`,
             }}
-            className="background-image"
           />
         ))}
       </div>

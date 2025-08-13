@@ -10,20 +10,6 @@ import { ShareModal } from "./ShareModal";
 import { parseSrtFile, type Caption } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
-// Safari detection utility
-const isSafari = () => {
-  const ua = navigator.userAgent.toLowerCase();
-  return ua.includes('safari') && !ua.includes('chrome');
-};
-
-// Audio format support detection
-const getSupportedAudioFormat = () => {
-  if (isSafari()) {
-    return 'm4a'; // Safari has excellent AAC support
-  }
-  return 'mp3'; // Default fallback
-};
-
 interface Track {
   id: string;
   title: string;
@@ -40,15 +26,15 @@ const mockTracks: Track[] = [
     id: "1",
     title: "What is Ego Death?",
     description: "Exploring the profound dissolution of the separate self and the awakening to true consciousness",
-    duration: 6420, // ~107 minutes (updated based on file size)
+    duration: 3900, // ~65 minutes
     audioUrl: "/audio/What is Ego Death.m4a",
     defaultBackgroundMusic: "bg1" // Expansion
   },
   {
     id: "2", 
-    title: "What is Nonduality?",
+    title: "What is Non-Duality?",
     description: "Understanding the fundamental unity of existence beyond the illusion of separation",
-    duration: 5340, // ~89 minutes (updated based on file size)
+    duration: 4140, // ~69 minutes
     audioUrl: "/audio/What is Nonduality.m4a",
     defaultBackgroundMusic: "bg2" // Aura
   },
@@ -56,15 +42,15 @@ const mockTracks: Track[] = [
     id: "3",
     title: "The Four Selves",
     description: "A deep exploration of the different levels of self and their transformation through spiritual practice",
-    duration: 8040, // ~134 minutes (updated based on file size)
+    duration: 4740, // ~79 minutes
     audioUrl: "/audio/The Four Selves.m4a",
     defaultBackgroundMusic: "bg3" // Into Silence
   },
   {
     id: "4",
-    title: "Realization and Transformation",
+    title: "Realisation and Transformation",
     description: "The journey from intellectual understanding to embodied awakening and lasting change",
-    duration: 8220, // ~137 minutes (updated based on file size)
+    duration: 5640, // ~94 minutes
     audioUrl: "/audio/Realization and Transformation.m4a",
     defaultBackgroundMusic: "bg4" // Resonance
   },
@@ -72,7 +58,7 @@ const mockTracks: Track[] = [
     id: "5",
     title: "The Evolution of Nonduality",
     description: "How the understanding of oneness evolves and deepens through practice and insight",
-    duration: 8460, // ~141 minutes (updated based on file size)
+    duration: 5880, // ~98 minutes
     audioUrl: "/audio/The Evolution of Nonduality.m4a",
     defaultBackgroundMusic: "bg5" // Transcendence
   },
@@ -80,7 +66,7 @@ const mockTracks: Track[] = [
     id: "6",
     title: "The Edge of Evolution",
     description: "Exploring the cutting edge of human consciousness and spiritual development",
-    duration: 6240, // ~104 minutes (updated based on file size)
+    duration: 4080, // ~68 minutes
     audioUrl: "/audio/The Edge of Evolution.m4a",
     defaultBackgroundMusic: "bg6" // Luminescence
   },
@@ -88,17 +74,17 @@ const mockTracks: Track[] = [
     id: "7",
     title: "Realigning the Soul",
     description: "The process of aligning our deepest essence with the highest truth and purpose",
-    duration: 7260, // ~121 minutes (updated based on file size)
+    duration: 4680, // ~78 minutes
     audioUrl: "/audio/Realigning the Soul.m4a",
-    defaultBackgroundMusic: "bg1" // Expansion
+    defaultBackgroundMusic: "bg7" // Expansion
   },
   {
     id: "8",
     title: "Rational Idealism",
     description: "Bridging the gap between intellectual understanding and spiritual realization",
-    duration: 5640, // ~94 minutes (updated based on file size)
+    duration: 3420, // ~57 minutes
     audioUrl: "/audio/Rational Idealism.m4a",
-    defaultBackgroundMusic: "bg2" // Aura
+    defaultBackgroundMusic: "bg8" // Aura
   }
 ];
 
@@ -184,27 +170,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const backgroundAudioRef = useRef<HTMLAudioElement>(null);
 
-  // Log browser information for debugging
-  useEffect(() => {
-    if (isSafari()) {
-      console.log('Safari detected - using enhanced audio compatibility mode');
-      console.log('User Agent:', navigator.userAgent);
-    }
-  }, []);
-
   const track = mockTracks[currentTrack];
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-
-    // Safari-specific audio initialization for better compatibility
-    if (isSafari()) {
-      audio.preload = 'metadata';
-      audio.crossOrigin = 'anonymous';
-      // Safari needs explicit audio format support
-      audio.setAttribute('type', 'audio/mp4');
-    }
 
     const updateTime = () => setCurrentTime(audio.currentTime);
     const updateDuration = () => setDuration(audio.duration);
@@ -212,25 +182,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('loadedmetadata', updateDuration);
     audio.addEventListener('ended', handleNext);
-    
-    // Add error handling for Safari compatibility
-    const handleError = (e: Event) => {
-      console.error('Audio error:', e);
-      if (isSafari()) {
-        console.log('Safari audio error detected, attempting recovery...');
-        // Safari-specific error recovery
-        setTimeout(() => {
-          audio.load();
-        }, 1000);
-      }
-    };
-    audio.addEventListener('error', handleError);
 
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('ended', handleNext);
-      audio.removeEventListener('error', handleError);
     };
   }, [currentTrack]);
 
@@ -260,8 +216,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   useEffect(() => {
     const loadCaptions = async () => {
       try {
-        // Map track index to transcript file names
-        const transcriptFiles = [
+        // Map track indices to actual SRT file names
+        const srtFileMap = [
           "Transcript-What-is-Ego-Death-mp3.srt",
           "Transcript-What-is-Nonduality-mp3.srt", 
           "Transcript-The-Four-Selves-mp3.srt",
@@ -271,22 +227,18 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           "Transcript-Realigning-the-Soul-mp3.srt",
           "Transcript-Rational-Idealism-mp3.srt"
         ];
-
-        const currentTranscriptFile = transcriptFiles[currentTrack];
-        if (!currentTranscriptFile) {
-          setCaptions([]);
-          return;
-        }
-
-        // Try SRT format (primary format)
-        const srtResponse = await fetch(`/transcripts/${currentTranscriptFile}`);
-        if (srtResponse.ok) {
-          const srtContent = await srtResponse.text();
-          // Check if the response is actually SRT content (not HTML from 404)
-          if (srtContent.includes('-->') && !srtContent.includes('<!DOCTYPE')) {
-            const captionData = parseSrtFile(srtContent);
-            setCaptions(captionData);
-            return;
+        
+        const srtFileName = srtFileMap[currentTrack];
+        if (srtFileName) {
+          const srtResponse = await fetch(`/transcripts/${srtFileName}`);
+          if (srtResponse.ok) {
+            const srtContent = await srtResponse.text();
+            // Check if the response is actually SRT content (not HTML from 404)
+            if (srtContent.includes('-->') && !srtContent.includes('<!DOCTYPE')) {
+              const captionData = parseSrtFile(srtContent);
+              setCaptions(captionData);
+              return;
+            }
           }
         }
         
@@ -322,7 +274,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         backgroundAudioRef.current.pause();
       }
     } else {
-      audio.play();
+      audio.play().catch((error) => {
+        console.error('Audio play failed:', error);
+      });
       
       // If background music is enabled and should be active, activate the default background music
       if (isBackgroundMusicPlaying && autoActivateBackgroundMusic && !backgroundMusic) {
@@ -336,7 +290,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         });
       }
     }
-    setIsPlaying(!isPlaying);
+    // Remove manual setIsPlaying - let the audio element event listeners handle it
   };
 
   const handlePrevious = () => {
@@ -344,6 +298,25 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     setCurrentTrack(newTrackIndex);
     setCurrentTime(0);
     updateTrackUrl(newTrackIndex);
+    
+    // Update the audio source for the new track
+    const audio = audioRef.current;
+    if (audio) {
+      audio.src = mockTracks[newTrackIndex].audioUrl;
+      audio.load();
+      
+      // Auto-play the new track if it was playing before
+      if (isPlaying) {
+        setTimeout(() => {
+          if (audio) {
+            audio.play().catch((error) => {
+              console.log('Auto-play prevented by browser:', error);
+            });
+            setIsPlaying(true);
+          }
+        }, 200); // Delay to ensure audio element is fully updated
+      }
+    }
     
     // Activate default background music if background music is currently playing
     if (isBackgroundMusicPlaying) {
@@ -356,6 +329,25 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     setCurrentTrack(newTrackIndex);
     setCurrentTime(0);
     updateTrackUrl(newTrackIndex);
+    
+    // Update the audio source for the new track
+    const audio = audioRef.current;
+    if (audio) {
+      audio.src = mockTracks[newTrackIndex].audioUrl;
+      audio.load();
+      
+      // Auto-play the new track if it was playing before
+      if (isPlaying) {
+        setTimeout(() => {
+          if (audio) {
+            audio.play().catch((error) => {
+              console.log('Auto-play prevented by browser:', error);
+            });
+            setIsPlaying(true);
+          }
+        }, 200); // Delay to ensure audio element is fully updated
+      }
+    }
     
     // Activate default background music if background music is currently playing
     if (isBackgroundMusicPlaying) {
@@ -391,48 +383,22 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     setIsDrawerOpen(false);
     updateTrackUrl(trackIndex);
     
-    // Auto-play the selected track immediately
+    // Update the audio source for the new track
     const audio = audioRef.current;
     if (audio) {
-      // Safari-specific handling for better compatibility
-      if (isSafari()) {
-        // Safari needs more explicit audio setup
-        audio.preload = 'metadata';
-        audio.crossOrigin = 'anonymous';
-      }
-      
-      // Set the new source and load
+      // Set the new audio source
       audio.src = mockTracks[trackIndex].audioUrl;
-      audio.load(); // Ensure the new audio source is loaded
+      audio.load(); // Ensure the audio is loaded
       
-      // Start playback as soon as the audio is ready
-      const playAudio = () => {
-        audio.play().catch((error) => {
-          console.log('Auto-play prevented by browser:', error);
-          // If auto-play fails, at least set the track as ready to play
-          setIsPlaying(false);
-        });
-        setIsPlaying(true);
-      };
-      
-      // Safari-specific timing for better compatibility
-      if (isSafari()) {
-        // Safari needs a bit more time to load audio
-        setTimeout(() => {
-          if (audio.readyState >= 2) { // HAVE_CURRENT_DATA
-            playAudio();
-          } else {
-            audio.addEventListener('canplay', playAudio, { once: true });
-          }
-        }, 100);
-      } else {
-        // Standard handling for other browsers
-        if (audio.readyState >= 2) { // HAVE_CURRENT_DATA
-          playAudio();
-        } else {
-          audio.addEventListener('canplay', playAudio, { once: true });
+      // Auto-play the selected track
+      setTimeout(() => {
+        if (audio) {
+          audio.play().catch((error) => {
+            console.log('Auto-play prevented by browser:', error);
+          });
+          setIsPlaying(true);
         }
-      }
+      }, 200); // Increased delay to ensure audio element is fully updated
     }
 
     // Activate default background music
@@ -495,9 +461,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const getTrackSlug = (trackIndex: number) => {
     const trackSlugs = [
       "what-is-ego-death",
-      "what-is-nonduality", 
+      "what-is-non-duality", 
       "the-four-selves",
-      "realization-and-transformation",
+      "realisation-and-transformation",
       "the-evolution-of-nonduality",
       "the-edge-of-evolution",
       "realigning-the-soul",
@@ -545,10 +511,34 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         tracks={mockTracks}
         currentTrack={currentTrack}
         onTrackSelect={handleTrackSelect}
+        isPlaying={isPlaying}
       />
 
       {/* Audio Element */}
-      <audio ref={audioRef} src={track.audioUrl} />
+      <audio 
+        ref={audioRef} 
+        src={track.audioUrl} 
+        preload="metadata"
+        onLoadedMetadata={() => {
+          const audio = audioRef.current;
+          if (audio) {
+            setDuration(audio.duration);
+          }
+        }}
+        onTimeUpdate={() => {
+          const audio = audioRef.current;
+          if (audio) {
+            setCurrentTime(audio.currentTime);
+          }
+        }}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => handleNext()}
+        onError={(e) => {
+          console.error('Audio error:', e);
+          console.error('Audio src:', track.audioUrl);
+        }}
+      />
       
       {/* Background Music Element */}
       {backgroundMusic && (
