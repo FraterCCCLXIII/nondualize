@@ -295,12 +295,19 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
   const handlePrevious = () => {
     const newTrackIndex = currentTrack === 0 ? mockTracks.length - 1 : currentTrack - 1;
+    
+    // Stop current audio before switching tracks
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+    
     setCurrentTrack(newTrackIndex);
     setCurrentTime(0);
     updateTrackUrl(newTrackIndex);
     
     // Update the audio source for the new track
-    const audio = audioRef.current;
     if (audio) {
       audio.src = mockTracks[newTrackIndex].audioUrl;
       audio.load();
@@ -326,12 +333,19 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
   const handleNext = () => {
     const newTrackIndex = currentTrack === mockTracks.length - 1 ? 0 : currentTrack + 1;
+    
+    // Stop current audio before switching tracks
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+    
     setCurrentTrack(newTrackIndex);
     setCurrentTime(0);
     updateTrackUrl(newTrackIndex);
     
     // Update the audio source for the new track
-    const audio = audioRef.current;
     if (audio) {
       audio.src = mockTracks[newTrackIndex].audioUrl;
       audio.load();
@@ -370,6 +384,13 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     if (track.defaultBackgroundMusic && autoActivateBackgroundMusic) {
       const bgTrack = backgroundMusicTracks.find(bg => bg.id === track.defaultBackgroundMusic);
       if (bgTrack) {
+        // Stop current background music before switching
+        const backgroundAudio = backgroundAudioRef.current;
+        if (backgroundAudio) {
+          backgroundAudio.pause();
+          backgroundAudio.currentTime = 0;
+        }
+        
         setBackgroundMusic(bgTrack.audioUrl);
         setIsBackgroundMusicPlaying(true);
         setSelectedBackgroundTrack(bgTrack.id);
@@ -378,13 +399,19 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   };
 
   const handleTrackSelect = (trackIndex: number) => {
+    // Stop current audio before switching tracks
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+    
     setCurrentTrack(trackIndex);
     setCurrentTime(0);
     setIsDrawerOpen(false);
     updateTrackUrl(trackIndex);
     
     // Update the audio source for the new track
-    const audio = audioRef.current;
     if (audio) {
       // Set the new audio source
       audio.src = mockTracks[trackIndex].audioUrl;
@@ -426,6 +453,13 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const handleBackgroundMusicSelect = (trackId: string) => {
     const selectedTrack = backgroundMusicTracks.find(track => track.id === trackId);
     if (selectedTrack) {
+      // Stop current background music before switching
+      const backgroundAudio = backgroundAudioRef.current;
+      if (backgroundAudio) {
+        backgroundAudio.pause();
+        backgroundAudio.currentTime = 0;
+      }
+      
       setBackgroundMusic(selectedTrack.audioUrl);
       setIsBackgroundMusicPlaying(true);
       setSelectedBackgroundTrack(trackId);
