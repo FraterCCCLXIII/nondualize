@@ -182,12 +182,17 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
     const handleEnded = () => handleNext();
+    const handleError = (e: Event) => {
+      console.error('Audio error:', e);
+      console.error('Audio src:', audio.src);
+    };
 
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('loadedmetadata', updateDuration);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
 
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
@@ -195,6 +200,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
     };
   }, [currentTrack]);
 
@@ -282,8 +288,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         backgroundAudioRef.current.pause();
       }
     } else {
-      // Only start playing if not already playing
-      if (!audio.ended && audio.readyState >= 2) {
+      // Ensure audio is ready to play
+      if (audio.readyState >= 2) {
         audio.play().catch((error) => {
           console.error('Audio play failed:', error);
         });
@@ -299,9 +305,15 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             console.log('Background music play failed:', error);
           });
         }
+      } else {
+        // If audio isn't ready, wait for it to load
+        audio.addEventListener('canplay', () => {
+          audio.play().catch((error) => {
+            console.error('Audio play failed after loading:', error);
+          });
+        }, { once: true });
       }
     }
-    // Remove manual setIsPlaying - let the audio element event listeners handle it
   };
 
   const handlePrevious = () => {
@@ -419,7 +431,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     
     setCurrentTrack(trackIndex);
     setCurrentTime(0);
-    setIsDrawerOpen(false);
+    setIsDrawerOpen(false); // Ensure drawer closes on mobile
     updateTrackUrl(trackIndex);
     
     // Update the audio source for the new track
@@ -616,7 +628,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
               max={duration || track.duration}
               step={1}
               onValueChange={handleSeek}
-              className="w-full mb-2"
+              className="w-full mb-2 slider-thumb"
             />
             <div className="flex justify-between text-xs text-white/60">
               <span>{formatTime(currentTime)}</span>
@@ -676,7 +688,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                     max={1}
                     step={0.01}
                     onValueChange={handleVolumeChange}
-                    className="w-full"
+                    className="w-full slider-thumb"
                   />
                   <div className="text-xs text-white/60 text-center">
                     {Math.round(volume * 100)}%
@@ -798,7 +810,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                           max={1}
                           step={0.01}
                           onValueChange={handleBackgroundMusicVolumeChange}
-                          className={`w-full ${!selectedBackgroundTrack ? 'opacity-50' : ''}`}
+                          className={`w-full slider-thumb ${!selectedBackgroundTrack ? 'opacity-50' : ''}`}
                           disabled={!selectedBackgroundTrack}
                         />
                       </div>
