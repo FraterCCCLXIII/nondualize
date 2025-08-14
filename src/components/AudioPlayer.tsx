@@ -581,25 +581,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         ref={audioRef} 
         src={track.audioUrl} 
         preload="metadata"
-        onLoadedMetadata={() => {
-          const audio = audioRef.current;
-          if (audio) {
-            setDuration(audio.duration);
-          }
-        }}
-        onTimeUpdate={() => {
-          const audio = audioRef.current;
-          if (audio) {
-            setCurrentTime(audio.currentTime);
-          }
-        }}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        onEnded={() => handleNext()}
-        onError={(e) => {
-          console.error('Audio error:', e);
-          console.error('Audio src:', track.audioUrl);
-        }}
       />
       
       {/* Background Music Element */}
@@ -612,8 +593,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       )}
 
       {/* Player Controls */}
-      <div className="absolute bottom-0 left-0 right-0 p-6">
-        <div className="rounded-xl p-4 max-w-2xl">
+      <div className="absolute bottom-0 left-0 right-0 p-6 pb-safe">
+        <div className="rounded-xl p-4 max-w-2xl mx-auto">
           {/* Track Info */}
           <div className={`mb-4 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
             <h2 className="text-xl font-semibold text-white mb-1">
