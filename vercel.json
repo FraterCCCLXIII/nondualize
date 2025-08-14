@@ -3,38 +3,7 @@
   "outputDirectory": "dist",
   "cleanUrls": true,
   "trailingSlash": false,
-  "redirects": [
-    {
-      "source": "/life",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/teachings", 
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/books",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/archive",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/engage",
-      "destination": "/",
-      "permanent": false
-    }
-  ],
   "rewrites": [
-    {
-      "source": "/index.html",
-      "destination": "/index.html"
-    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
