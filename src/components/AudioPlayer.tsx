@@ -227,18 +227,27 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   // Handle background music playback and volume
   useEffect(() => {
     const backgroundAudio = backgroundAudioRef.current;
+    console.log('Background music useEffect triggered:', {
+      backgroundAudio: !!backgroundAudio,
+      isBackgroundMusicPlaying,
+      backgroundMusic,
+      hasSource: backgroundAudio?.src
+    });
+    
     if (!backgroundAudio) return;
 
-    if (isBackgroundMusicPlaying) {
+    if (isBackgroundMusicPlaying && backgroundMusic) {
       // Don't set volume here - let the volume handlers manage it
       // backgroundAudio.volume = volume * backgroundMusicVolume;
+      console.log('Attempting to play background music:', backgroundMusic);
       backgroundAudio.play().catch((error) => {
         console.log('Background music auto-play prevented:', error);
       });
     } else {
+      console.log('Pausing background music');
       backgroundAudio.pause();
     }
-  }, [backgroundMusic, isBackgroundMusicPlaying]); // Removed volume dependencies
+  }, [backgroundMusic, isBackgroundMusicPlaying]); // Keep backgroundMusic dependency for playback
 
   // Ensure volume is properly applied to audio elements
   useEffect(() => {
@@ -466,9 +475,17 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           backgroundAudio.currentTime = 0;
         }
         
+        // Set the new background music source
         setBackgroundMusic(bgTrack.audioUrl);
         setIsBackgroundMusicPlaying(true);
         setSelectedBackgroundTrack(bgTrack.id);
+        
+        // Update the background audio element source
+        if (backgroundAudio) {
+          backgroundAudio.src = bgTrack.audioUrl;
+          backgroundAudio.load();
+          console.log('Background music source updated to:', bgTrack.audioUrl);
+        }
       }
     }
   };
