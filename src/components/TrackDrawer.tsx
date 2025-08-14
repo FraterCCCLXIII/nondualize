@@ -54,6 +54,11 @@ export function TrackDrawer({
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPageSlug, setCurrentPageSlug] = useState("");
 
+  // Debug: Log when component receives props
+  useEffect(() => {
+    console.log('TrackDrawer props:', { isOpen, currentTrack, isPlaying, onTrackSelect: typeof onTrackSelect });
+  }, [isOpen, currentTrack, isPlaying, onTrackSelect]);
+
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -186,7 +191,18 @@ export function TrackDrawer({
                         ? 'bg-[hsl(var(--primary)/0.2)] border border-[hsl(var(--primary)/0.3)]' 
                         : 'hover:bg-white/5'
                     }`}
-                    onClick={() => onTrackSelect(index)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('Track clicked:', index, track.title);
+                      console.log('onTrackSelect function:', onTrackSelect);
+                      console.log('Event target:', e.target);
+                      if (typeof onTrackSelect === 'function') {
+                        onTrackSelect(index);
+                      } else {
+                        console.error('onTrackSelect is not a function:', onTrackSelect);
+                      }
+                    }}
                   >
                     <div className="flex items-start gap-3">
                       {/* Image Square */}

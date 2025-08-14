@@ -452,6 +452,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   };
 
   const handleTrackSelect = (trackIndex: number) => {
+    console.log('handleTrackSelect called with index:', trackIndex);
+    
     // Stop current audio before switching tracks
     const audio = audioRef.current;
     if (audio) {
