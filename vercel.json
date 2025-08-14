@@ -3,10 +3,56 @@
   "outputDirectory": "dist",
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/life",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/teachings", 
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/books",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/archive",
+      "destination": "/",
+      "permanent": false
+    },
+    {
+      "source": "/engage",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
+        }
+      ]
     }
   ]
 }
