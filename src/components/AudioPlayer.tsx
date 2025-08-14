@@ -230,14 +230,32 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     if (!backgroundAudio) return;
 
     if (isBackgroundMusicPlaying) {
-      backgroundAudio.volume = volume * backgroundMusicVolume;
+      // Don't set volume here - let the volume handlers manage it
+      // backgroundAudio.volume = volume * backgroundMusicVolume;
       backgroundAudio.play().catch((error) => {
         console.log('Background music auto-play prevented:', error);
       });
     } else {
       backgroundAudio.pause();
     }
-  }, [backgroundMusic, isBackgroundMusicPlaying, volume, backgroundMusicVolume]);
+  }, [backgroundMusic, isBackgroundMusicPlaying]); // Removed volume dependencies
+
+  // Ensure volume is properly applied to audio elements
+  useEffect(() => {
+    const audio = audioRef.current;
+    const backgroundAudio = backgroundAudioRef.current;
+    
+    if (audio) {
+      audio.volume = volume;
+      console.log('Applied volume to main audio:', volume);
+    }
+    
+    if (backgroundAudio && backgroundMusic) {
+      const bgVolume = volume * backgroundMusicVolume;
+      backgroundAudio.volume = bgVolume;
+      console.log('Applied volume to background audio:', bgVolume);
+    }
+  }, [volume, backgroundMusicVolume, backgroundMusic]);
 
   // Auto-activate default background music for the first track on mount
   useEffect(() => {
@@ -529,14 +547,29 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   };
 
   const handleVolumeChange = (value: number[]) => {
+    console.log('Volume change called with value:', value);
+    console.log('Current audio element:', audioRef.current);
+    console.log('Current background audio element:', backgroundAudioRef.current);
+    
     const newVolume = value[0];
+    console.log('Setting volume to:', newVolume);
+    
     setVolume(newVolume);
+    
     if (audioRef.current) {
       audioRef.current.volume = newVolume;
+      console.log('Main audio volume set to:', audioRef.current.volume);
+    } else {
+      console.log('Main audio element not found');
     }
+    
     // Update background music volume to 75% of main volume
     if (backgroundAudioRef.current) {
-      backgroundAudioRef.current.volume = newVolume * 0.75;
+      const bgVolume = newVolume * 0.75;
+      backgroundAudioRef.current.volume = bgVolume;
+      console.log('Background audio volume set to:', bgVolume);
+    } else {
+      console.log('Background audio element not found');
     }
   };
 
@@ -588,10 +621,21 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   };
 
   const handleBackgroundMusicVolumeChange = (value: number[]) => {
+    console.log('Background music volume change called with value:', value);
+    console.log('Current background audio element:', backgroundAudioRef.current);
+    console.log('Current main volume:', volume);
+    
     const newVolume = value[0];
+    console.log('Setting background music volume to:', newVolume);
+    
     setBackgroundMusicVolume(newVolume);
+    
     if (backgroundAudioRef.current) {
-      backgroundAudioRef.current.volume = newVolume * volume;
+      const finalVolume = newVolume * volume;
+      backgroundAudioRef.current.volume = finalVolume;
+      console.log('Background audio volume set to:', finalVolume);
+    } else {
+      console.log('Background audio element not found');
     }
   };
 
@@ -747,7 +791,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                   <Volume2 className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-48 p-4 glass-morphism border-white/20">
+              <PopoverContent className="w-48 p-4 glass-morphism border-white/20 touch-manipulation">
                 <div className="space-y-3">
                   <div className="text-sm font-medium text-white">Volume</div>
                   <Slider
@@ -801,7 +845,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             >
               <Share2 className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
-              <PopoverContent className="w-64 p-4 glass-morphism border-white/20">
+              <PopoverContent className="w-64 p-4 glass-morphism border-white/20 touch-manipulation">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-medium text-white">Background Music</div>
