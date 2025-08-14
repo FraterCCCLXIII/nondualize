@@ -306,6 +306,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     }
 
     if (isPlaying) {
+      // Just pause, don't reset position
       audio.pause();
       
       // Pause background music if it's active
@@ -315,11 +316,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     } else {
       // Prevent duplicate playback by checking if audio is already playing
       if (audio.readyState >= 2 && !audio.ended) {
-        // Stop any existing playback first
-        audio.pause();
-        audio.currentTime = 0;
-        
-        // Start fresh playback
+        // Resume from current position, don't reset
         audio.play().catch((error) => {
           console.error('Audio play failed:', error);
         });
@@ -651,8 +648,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       )}
 
       {/* Player Controls */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 md:p-6 pb-safe-mobile md:pb-6">
-        <div className="rounded-xl p-3 md:p-4 max-w-2xl">
+      <div className="absolute bottom-0 left-0 right-0 p-2 md:p-6 pb-safe-mobile md:pb-6">
+        <div className="rounded-xl p-2 md:p-4 max-w-2xl">
           {/* Track Info */}
           <div className={`mb-4 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
             <h2 className="text-lg md:text-xl font-semibold text-white mb-1">

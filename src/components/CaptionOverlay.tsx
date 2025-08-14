@@ -67,7 +67,7 @@ export function CaptionOverlay({ isActive, currentTime, captions }: CaptionOverl
       <div
         className={`max-w-4xl mx-4 transition-opacity duration-300 ${
           isVisible && !isFadingOut ? "opacity-100" : "opacity-0"
-        }`}
+        } mt-16 md:mt-0`}
       >
         <p className="text-white text-lg md:text-2xl font-medium text-center leading-relaxed drop-shadow-[0_0_10px_rgba(0,0,0,0.8)] [text-shadow:_0_0_10px_rgba(0,0,0,0.8)]">
           {currentCaption.text}
