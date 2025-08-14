@@ -1,43 +1,28 @@
 {
-  "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
+      "source": "/static/(.*)",
+      "destination": "/static/$1"
     },
     {
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1"
+      "source": "/assets/(.*)",
+      "destination": "/assets/$1"
     },
     {
-      "src": "/audio/(.*)",
-      "dest": "/audio/$1"
+      "source": "/audio/(.*)",
+      "destination": "/audio/$1"
     },
     {
-      "src": "/transcripts/(.*)",
-      "dest": "/transcripts/$1"
+      "source": "/transcripts/(.*)",
+      "destination": "/transcripts/$1"
     },
     {
-      "src": "/background-music/(.*)",
-      "dest": "/background-music/$1"
+      "source": "/background-music/(.*)",
+      "destination": "/background-music/$1"
     },
     {
-      "src": "/favicon.ico",
-      "dest": "/favicon.ico",
-      "status": 404
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
