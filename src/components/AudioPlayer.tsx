@@ -581,6 +581,10 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         ref={audioRef} 
         src={track.audioUrl} 
         preload="metadata"
+        onError={(e) => {
+          console.error('Audio error:', e);
+          console.error('Audio src:', track.audioUrl);
+        }}
       />
       
       {/* Background Music Element */}
@@ -593,7 +597,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       )}
 
       {/* Player Controls */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 pb-safe">
+      <div className="absolute bottom-0 left-0 right-0 p-6">
         <div className="rounded-xl p-4 max-w-2xl mx-auto">
           {/* Track Info */}
           <div className={`mb-4 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
