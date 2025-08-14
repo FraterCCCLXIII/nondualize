@@ -4,6 +4,28 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect } from "react";
 import { NavigationModal } from "./NavigationModal";
 
+// Import track images (using the same images as BackgroundSlideshow)
+import img1 from "@/assets/pexels-dennisariel-32880873.jpg";
+import img2 from "@/assets/pexels-lum3n-44775-167684.jpg";
+import img3 from "@/assets/pexels-dennisariel-32880874.jpg";
+import img4 from "@/assets/pexels-simon73-1323550.jpg";
+import img5 from "@/assets/pexels-todd-trapani-488382-1420440.jpg";
+import img6 from "@/assets/pexels-luisfe-5191926.jpg";
+import img7 from "@/assets/pexels-alberlan-7311921.jpg";
+import img8 from "@/assets/pexels-sliceisop-2873669.jpg";
+
+// Track image mapping (first image from each track's set)
+const trackImages = [
+  img1,  // Track 1: "What is Ego Death?"
+  img2,  // Track 2: "What is Non-Duality?"
+  img5,  // Track 3: "The Four Selves"
+  img6,  // Track 4: "Realisation and Transformation"
+  img7,  // Track 5: "The Evolution of Nonduality"
+  img8,  // Track 6: "The Edge of Evolution"
+  img3,  // Track 7: "Realigning the Soul"
+  img4   // Track 8: "Rational Idealism"
+];
+
 interface Track {
   id: string;
   title: string;
@@ -169,11 +191,11 @@ export function TrackDrawer({
                     <div className="flex items-start gap-3">
                       {/* Image Square */}
                       <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-lg border border-white/10 flex items-center justify-center">
-                        <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-blue-400 rounded-md flex items-center justify-center">
-                          <span className="text-white text-xs font-medium">
-                            {index + 1}
-                          </span>
-                        </div>
+                        <img
+                          src={trackImages[index]}
+                          alt={`Track ${index + 1} image`}
+                          className="w-full h-full object-cover rounded-md"
+                        />
                       </div>
 
                       <div className="flex-1 min-w-0">
