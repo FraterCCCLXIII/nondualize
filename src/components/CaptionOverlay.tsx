@@ -63,13 +63,13 @@ export function CaptionOverlay({ isActive, currentTime, captions }: CaptionOverl
   }
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
+    <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
       <div
         className={`max-w-4xl mx-4 transition-opacity duration-300 ${
           isVisible && !isFadingOut ? "opacity-100" : "opacity-0"
         }`}
       >
-        <p className="text-white text-2xl font-medium text-center leading-relaxed drop-shadow-[0_0_10px_rgba(0,0,0,0.8)] [text-shadow:_0_0_10px_rgba(0,0,0,0.8)]">
+        <p className="text-white text-lg md:text-2xl font-medium text-center leading-relaxed drop-shadow-[0_0_10px_rgba(0,0,0,0.8)] [text-shadow:_0_0_10px_rgba(0,0,0,0.8)]">
           {currentCaption.text}
         </p>
       </div>

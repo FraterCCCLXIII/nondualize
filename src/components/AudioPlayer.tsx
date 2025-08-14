@@ -427,10 +427,20 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     if (audio) {
       audio.pause();
       audio.currentTime = 0;
+      // Ensure audio is completely stopped
+      audio.src = '';
+      audio.load();
+    }
+    
+    // Stop background music when switching tracks
+    if (backgroundAudioRef.current) {
+      backgroundAudioRef.current.pause();
+      backgroundAudioRef.current.currentTime = 0;
     }
     
     setCurrentTrack(trackIndex);
     setCurrentTime(0);
+    setIsPlaying(false); // Reset playing state
     setIsDrawerOpen(false); // Ensure drawer closes on mobile
     updateTrackUrl(trackIndex);
     
@@ -446,7 +456,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           audio.play().catch((error) => {
             console.log('Auto-play prevented by browser:', error);
           });
-          // Remove manual setIsPlaying - let the audio element event listeners handle it
         }
       }, 200); // Increased delay to ensure audio element is fully updated
     }
@@ -609,14 +618,14 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       )}
 
       {/* Player Controls */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 pb-safe-mobile md:pb-6">
-        <div className="rounded-xl p-4 max-w-2xl">
+      <div className="absolute bottom-0 left-0 right-0 p-3 md:p-6 pb-safe-mobile md:pb-6">
+        <div className="rounded-xl p-3 md:p-4 max-w-2xl">
           {/* Track Info */}
           <div className={`mb-4 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-            <h2 className="text-xl font-semibold text-white mb-1">
+            <h2 className="text-lg md:text-xl font-semibold text-white mb-1">
               {track.title}
             </h2>
-            <p className="text-sm text-white/70 mb-3">
+            <p className="text-xs md:text-sm text-white/70 mb-3">
               {track.description}
             </p>
           </div>
@@ -637,26 +646,26 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3 flex-wrap">
             <Button
               variant="ghost"
               size="icon"
               onClick={handlePrevious}
-              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10"
+              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-10 w-10 md:h-12 md:w-12"
             >
-              <SkipBack className="h-5 w-5" />
+              <SkipBack className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
 
             <Button
               variant="ghost"
               size="icon"
               onClick={togglePlay}
-              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-12 w-12"
+              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-10 w-10 md:h-12 md:w-12"
             >
               {isPlaying ? (
-                <Pause className="h-6 w-6" />
+                <Pause className="h-5 w-5 md:h-6 md:w-6" />
               ) : (
-                <Play className="h-6 w-6 ml-0.5" />
+                <Play className="h-5 w-5 md:h-6 md:w-6 ml-0.5" />
               )}
             </Button>
 
@@ -664,9 +673,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
               variant="ghost"
               size="icon"
               onClick={handleNext}
-              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10"
+              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-10 w-10 md:h-12 md:w-12"
             >
-              <SkipForward className="h-5 w-5" />
+              <SkipForward className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
 
             {/* Volume Control */}
@@ -675,9 +684,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10"
+                  className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-10 w-10 md:h-12 md:w-12"
                 >
-                  <Volume2 className="h-5 w-5" />
+                  <Volume2 className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-48 p-4 glass-morphism border-white/20">
@@ -703,11 +712,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 ${
+                  className={`text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-10 w-10 md:h-12 md:w-12 ${
                     isBackgroundMusicPlaying ? 'text-[hsl(var(--accent))]' : ''
                   }`}
                 >
-                  <Music className="h-5 w-5" />
+                  <Music className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>
               </PopoverTrigger>
 
@@ -717,11 +726,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                 variant="ghost"
                 size="icon"
                 onClick={toggleCaptions}
-                className={`text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 ${
+                className={`text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-10 w-10 md:h-12 md:w-12 ${
                   isCaptionsActive ? 'text-[hsl(var(--accent))]' : ''
                 }`}
               >
-                <Subtitles className="h-5 w-5" />
+                <Subtitles className="h-4 w-4 md:h-5 md:w-5" />
               </Button>
             )}
 
@@ -730,9 +739,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
               variant="ghost"
               size="icon"
               onClick={() => setIsShareModalOpen(true)}
-              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10"
+              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-10 w-10 md:h-12 md:w-12"
             >
-              <Share2 className="h-5 w-5" />
+              <Share2 className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
               <PopoverContent className="w-64 p-4 glass-morphism border-white/20">
                 <div className="space-y-3">
