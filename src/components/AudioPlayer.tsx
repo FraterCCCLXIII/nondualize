@@ -173,14 +173,33 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
   const track = mockTracks[currentTrack];
 
+  // Initialize audio element with initial track
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio && !audio.src) {
+      audio.src = track.audioUrl;
+      audio.load();
+    }
+  }, []); // Run once on mount
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const updateTime = () => setCurrentTime(audio.currentTime);
     const updateDuration = () => setDuration(audio.duration);
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
+    const handlePlay = () => {
+      // Prevent duplicate state updates
+      if (!isPlaying) {
+        setIsPlaying(true);
+      }
+    };
+    const handlePause = () => {
+      // Prevent duplicate state updates
+      if (isPlaying) {
+        setIsPlaying(false);
+      }
+    };
     const handleEnded = () => handleNext();
     const handleError = (e: Event) => {
       console.error('Audio error:', e);
@@ -202,7 +221,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
     };
-  }, [currentTrack]);
+  }, [currentTrack, isPlaying]);
 
   // Handle background music playback and volume
   useEffect(() => {
@@ -280,6 +299,12 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     const audio = audioRef.current;
     if (!audio) return;
 
+    // Ensure audio has a source
+    if (!audio.src) {
+      audio.src = track.audioUrl;
+      audio.load();
+    }
+
     if (isPlaying) {
       audio.pause();
       
@@ -288,8 +313,13 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         backgroundAudioRef.current.pause();
       }
     } else {
-      // Ensure audio is ready to play
-      if (audio.readyState >= 2) {
+      // Prevent duplicate playback by checking if audio is already playing
+      if (audio.readyState >= 2 && !audio.ended) {
+        // Stop any existing playback first
+        audio.pause();
+        audio.currentTime = 0;
+        
+        // Start fresh playback
         audio.play().catch((error) => {
           console.error('Audio play failed:', error);
         });
@@ -308,9 +338,12 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       } else {
         // If audio isn't ready, wait for it to load
         audio.addEventListener('canplay', () => {
-          audio.play().catch((error) => {
-            console.error('Audio play failed after loading:', error);
-          });
+          // Prevent duplicate playback
+          if (!isPlaying) {
+            audio.play().catch((error) => {
+              console.error('Audio play failed after loading:', error);
+            });
+          }
         }, { once: true });
       }
     }
@@ -452,7 +485,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       
       // Auto-play the selected track (always start new track when selected)
       setTimeout(() => {
-        if (audio && !audio.ended) {
+        if (audio && !audio.ended && audio.readyState >= 2) {
           audio.play().catch((error) => {
             console.log('Auto-play prevented by browser:', error);
           });
