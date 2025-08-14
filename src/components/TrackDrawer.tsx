@@ -143,115 +143,117 @@ export function TrackDrawer({
       {/* Drawer - Slide in/out */}
       <div
         className={`fixed inset-y-0 left-0 z-40 transition-transform duration-300 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          isOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'
         }`}
       >
-        <div className="w-80 h-full glass-morphism border-r flex flex-col">
-          {/* Header - Fixed */}
-          <div className="flex items-center justify-between p-6 border-b border-white/10 flex-shrink-0">
-            <div className="flex flex-col">
-              <span className="text-sm font-light text-white/80">Awakening with</span>
-              <h2 className="text-xl font-semibold text-white">Andrew Cohen</h2>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="text-white hover:bg-white/10"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-
-          {/* Scrollable Content Area */}
-          <ScrollArea className="flex-1">
-            <div className="p-6">
-              {/* Navigation Links */}
-              <div className="mb-6">
-                <nav className="space-y-3">
-                  {navigationLinks.map((link) => (
-                    <button
-                      key={link.name}
-                      onClick={() => handleNavigationClick(link.slug)}
-                      className="block w-full text-left text-white/70 hover:text-white transition-colors duration-200 font-medium text-sm"
-                    >
-                      {link.name}
-                    </button>
-                  ))}
-                </nav>
+        {isOpen && (
+          <div className="w-80 h-full glass-morphism border-r flex flex-col">
+            {/* Header - Fixed */}
+            <div className="flex items-center justify-between p-6 border-b border-white/10 flex-shrink-0">
+              <div className="flex flex-col">
+                <span className="text-sm font-light text-white/80">Awakening with</span>
+                <h2 className="text-xl font-semibold text-white">Andrew Cohen</h2>
               </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="text-white hover:bg-white/10"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
 
-              {/* Track List */}
-              <div className="space-y-3">
-                {tracks.map((track, index) => (
-                  <div
-                    key={track.id}
-                    className={`group cursor-pointer rounded-lg p-4 mb-3 transition-all duration-200 hover:bg-white/5 ${
-                      index === currentTrack 
-                        ? 'bg-[hsl(var(--primary)/0.2)] border border-[hsl(var(--primary)/0.3)]' 
-                        : 'hover:bg-white/5'
-                    }`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('Track clicked:', index, track.title);
-                      console.log('onTrackSelect function:', onTrackSelect);
-                      console.log('Event target:', e.target);
-                      if (typeof onTrackSelect === 'function') {
-                        onTrackSelect(index);
-                      } else {
-                        console.error('onTrackSelect is not a function:', onTrackSelect);
-                      }
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
-                      {/* Image Square */}
-                      <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-lg border border-white/10 flex items-center justify-center">
-                        <img
-                          src={trackImages[index]}
-                          alt={`Track ${index + 1} image`}
-                          className="w-full h-full object-cover rounded-md"
-                        />
-                      </div>
+            {/* Scrollable Content Area */}
+            <ScrollArea className="flex-1">
+              <div className="p-6">
+                {/* Navigation Links */}
+                <div className="mb-6">
+                  <nav className="space-y-3">
+                    {navigationLinks.map((link) => (
+                      <button
+                        key={link.name}
+                        onClick={() => handleNavigationClick(link.slug)}
+                        className="block w-full text-left text-white/70 hover:text-white transition-colors duration-200 font-medium text-sm"
+                      >
+                        {link.name}
+                      </button>
+                    ))}
+                  </nav>
+                </div>
 
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-medium text-white mb-1 line-clamp-1">
-                          {track.title}
-                        </h3>
-                        <p className="text-xs text-white/60 mb-2 line-clamp-2">
-                          {track.description}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-white/40">
-                            Duration: {formatDuration(track.duration)}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            {index === currentTrack && isPlaying && (
-                              <span className="text-xs text-[hsl(var(--primary))] font-medium">
-                                Playing
-                              </span>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleShare(index, track.title);
-                              }}
-                              className="w-6 h-6 opacity-0 group-hover:opacity-100 text-white/60 hover:text-white hover:bg-white/10 transition-opacity"
-                            >
-                              <Share2 className="h-3 w-3" />
-                            </Button>
+                {/* Track List */}
+                <div className="space-y-3">
+                  {tracks.map((track, index) => (
+                    <div
+                      key={track.id}
+                      className={`group cursor-pointer rounded-lg p-4 mb-3 transition-all duration-200 hover:bg-white/5 ${
+                        index === currentTrack 
+                          ? 'bg-[hsl(var(--primary)/0.2)] border border-[hsl(var(--primary)/0.3)]' 
+                          : 'hover:bg-white/5'
+                      }`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Track clicked:', index, track.title);
+                        console.log('onTrackSelect function:', onTrackSelect);
+                        console.log('Event target:', e.target);
+                        if (typeof onTrackSelect === 'function') {
+                          onTrackSelect(index);
+                        } else {
+                          console.error('onTrackSelect is not a function:', onTrackSelect);
+                        }
+                      }}
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Image Square */}
+                        <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-lg border border-white/10 flex items-center justify-center">
+                          <img
+                            src={trackImages[index]}
+                            alt={`Track ${index + 1} image`}
+                            className="w-full h-full object-cover rounded-md"
+                          />
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-medium text-white mb-1 line-clamp-1">
+                            {track.title}
+                          </h3>
+                          <p className="text-xs text-white/60 mb-2 line-clamp-2">
+                            {track.description}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-white/40">
+                              Duration: {formatDuration(track.duration)}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              {index === currentTrack && isPlaying && (
+                                <span className="text-xs text-[hsl(var(--primary))] font-medium">
+                                  Playing
+                                </span>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleShare(index, track.title);
+                                }}
+                                className="w-6 h-6 opacity-0 group-hover:opacity-100 text-white/60 hover:text-white hover:bg-white/10 transition-opacity"
+                              >
+                                <Share2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          </ScrollArea>
-        </div>
+            </ScrollArea>
+          </div>
+        )}
       </div>
 
       {/* Navigation Modal */}
