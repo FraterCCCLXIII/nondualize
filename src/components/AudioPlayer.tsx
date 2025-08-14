@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Play, Pause, SkipBack, SkipForward, Menu, Volume2, Music, Square, Subtitles, Share2 } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Menu, Volume2, VolumeX, Music, Square, Subtitles, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -162,6 +162,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const [isBackgroundMusicPlaying, setIsBackgroundMusicPlaying] = useState(true);
   const [backgroundMusicVolume, setBackgroundMusicVolume] = useState(0.2);
   const [selectedBackgroundTrack, setSelectedBackgroundTrack] = useState<string | null>(null);
+  const [lastPlayingBackgroundTrack, setLastPlayingBackgroundTrack] = useState<string | null>(null);
   const [autoActivateBackgroundMusic, setAutoActivateBackgroundMusic] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isCaptionsActive, setIsCaptionsActive] = useState(false);
@@ -178,15 +179,22 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
     const updateTime = () => setCurrentTime(audio.currentTime);
     const updateDuration = () => setDuration(audio.duration);
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    const handleEnded = () => handleNext();
 
     audio.addEventListener('timeupdate', updateTime);
     audio.addEventListener('loadedmetadata', updateDuration);
-    audio.addEventListener('ended', handleNext);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handleEnded);
 
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', updateDuration);
-      audio.removeEventListener('ended', handleNext);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handleEnded);
     };
   }, [currentTrack]);
 
@@ -274,20 +282,23 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         backgroundAudioRef.current.pause();
       }
     } else {
-      audio.play().catch((error) => {
-        console.error('Audio play failed:', error);
-      });
-      
-      // If background music is enabled and should be active, activate the default background music
-      if (isBackgroundMusicPlaying && autoActivateBackgroundMusic && !backgroundMusic) {
-        activateDefaultBackgroundMusic(currentTrack);
-      }
-      
-      // If background music is set but not playing, try to start it now (user interaction allows it)
-      if (backgroundMusic && isBackgroundMusicPlaying && backgroundAudioRef.current) {
-        backgroundAudioRef.current.play().catch((error) => {
-          console.log('Background music play failed:', error);
+      // Only start playing if not already playing
+      if (!audio.ended && audio.readyState >= 2) {
+        audio.play().catch((error) => {
+          console.error('Audio play failed:', error);
         });
+        
+        // If background music is enabled and should be active, activate the default background music
+        if (isBackgroundMusicPlaying && autoActivateBackgroundMusic && !backgroundMusic) {
+          activateDefaultBackgroundMusic(currentTrack);
+        }
+        
+        // If background music is set but not playing, try to start it now (user interaction allows it)
+        if (backgroundMusic && isBackgroundMusicPlaying && backgroundAudioRef.current) {
+          backgroundAudioRef.current.play().catch((error) => {
+            console.log('Background music play failed:', error);
+          });
+        }
       }
     }
     // Remove manual setIsPlaying - let the audio element event listeners handle it
@@ -319,7 +330,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             audio.play().catch((error) => {
               console.log('Auto-play prevented by browser:', error);
             });
-            setIsPlaying(true);
+            // Remove manual setIsPlaying - let the audio element event listeners handle it
           }
         }, 200); // Delay to ensure audio element is fully updated
       }
@@ -357,7 +368,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             audio.play().catch((error) => {
               console.log('Auto-play prevented by browser:', error);
             });
-            setIsPlaying(true);
+            // Remove manual setIsPlaying - let the audio element event listeners handle it
           }
         }, 200); // Delay to ensure audio element is fully updated
       }
@@ -417,13 +428,13 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       audio.src = mockTracks[trackIndex].audioUrl;
       audio.load(); // Ensure the audio is loaded
       
-      // Auto-play the selected track
+      // Auto-play the selected track (always start new track when selected)
       setTimeout(() => {
-        if (audio) {
+        if (audio && !audio.ended) {
           audio.play().catch((error) => {
             console.log('Auto-play prevented by browser:', error);
           });
-          setIsPlaying(true);
+          // Remove manual setIsPlaying - let the audio element event listeners handle it
         }
       }, 200); // Increased delay to ensure audio element is fully updated
     }
@@ -463,6 +474,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       setBackgroundMusic(selectedTrack.audioUrl);
       setIsBackgroundMusicPlaying(true);
       setSelectedBackgroundTrack(trackId);
+      setLastPlayingBackgroundTrack(trackId);
     }
   };
 
@@ -475,9 +487,25 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   };
 
   const stopBackgroundMusic = () => {
+    // Store the current track as the last playing track before stopping
+    if (selectedBackgroundTrack) {
+      setLastPlayingBackgroundTrack(selectedBackgroundTrack);
+    }
     setBackgroundMusic(null);
     setIsBackgroundMusicPlaying(false);
-    setSelectedBackgroundTrack(null);
+    // Keep the selectedBackgroundTrack so the purple selected state persists
+    // setSelectedBackgroundTrack(null);
+  };
+
+  const resumeLastBackgroundMusic = () => {
+    if (lastPlayingBackgroundTrack) {
+      const lastTrack = backgroundMusicTracks.find(track => track.id === lastPlayingBackgroundTrack);
+      if (lastTrack) {
+        setBackgroundMusic(lastTrack.audioUrl);
+        setIsBackgroundMusicPlaying(true);
+        setSelectedBackgroundTrack(lastPlayingBackgroundTrack);
+      }
+    }
   };
 
   const handleBackgroundMusicVolumeChange = (value: number[]) => {
@@ -713,62 +741,84 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-medium text-white">Background Music</div>
-                    {selectedBackgroundTrack && (
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={toggleBackgroundMusic}
-                          className="h-8 w-8 rounded-full bg-white/20 hover:bg-white/30 text-white"
-                        >
-                          {isBackgroundMusicPlaying ? (
-                            <Pause className="h-3 w-3" />
-                          ) : (
-                            <Play className="h-3 w-3 ml-0.5" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={stopBackgroundMusic}
-                          className="h-8 w-8 rounded-full bg-red-500/20 hover:bg-red-500/30 text-red-400"
-                        >
-                          <Square className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    )}
                   </div>
                   <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-2">
                     {backgroundMusicTracks.map((track) => (
                       <div
                         key={track.id}
-                        className={`p-2 rounded-md cursor-pointer transition-colors ${
+                        className={`group p-2 rounded-md cursor-pointer transition-colors ${
                           selectedBackgroundTrack === track.id
                             ? 'bg-[hsl(var(--accent))]/20 border border-[hsl(var(--accent))]/30'
                             : 'hover:bg-white/10'
                         }`}
                         onClick={() => handleBackgroundMusicSelect(track.id)}
                       >
-                        <div className="text-sm font-medium text-white">{track.title}</div>
-                        <div className="text-xs text-white/60">{track.description}</div>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-white">{track.title}</div>
+                            <div className="text-xs text-white/60">{track.description}</div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (selectedBackgroundTrack === track.id && isBackgroundMusicPlaying) {
+                                stopBackgroundMusic();
+                              } else {
+                                handleBackgroundMusicSelect(track.id);
+                              }
+                            }}
+                            className={`h-6 w-6 ${
+                              selectedBackgroundTrack === track.id 
+                                ? 'opacity-100' 
+                                : 'opacity-0 group-hover:opacity-100'
+                            } text-white hover:text-white hover:bg-white/10 transition-opacity ml-2 flex-shrink-0`}
+                          >
+                            {selectedBackgroundTrack === track.id && isBackgroundMusicPlaying ? (
+                              <VolumeX className="h-3 w-3" />
+                            ) : (
+                              <Play className="h-3 w-3 ml-0.5" />
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
-                  {selectedBackgroundTrack && (
-                    <div className="space-y-2">
-                      <div className="text-xs text-white/60">Background Music Volume</div>
-                      <Slider
-                        value={[backgroundMusicVolume]}
-                        max={1}
-                        step={0.01}
-                        onValueChange={handleBackgroundMusicVolumeChange}
-                        className="w-full"
-                      />
-                      <div className="text-xs text-white/60 text-center">
-                        {Math.round(backgroundMusicVolume * 100)}% of main volume
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={isBackgroundMusicPlaying ? stopBackgroundMusic : (lastPlayingBackgroundTrack ? resumeLastBackgroundMusic : null)}
+                        className={`h-8 w-8 rounded-full ${
+                          lastPlayingBackgroundTrack 
+                            ? 'bg-white/20 hover:bg-white/30 text-white' 
+                            : 'bg-white/10 hover:bg-white/20 text-white/60'
+                        }`}
+                        disabled={!lastPlayingBackgroundTrack}
+                      >
+                        {isBackgroundMusicPlaying ? (
+                          <VolumeX className="h-4 w-4" />
+                        ) : (
+                          <Play className="h-4 w-4 ml-0.5" />
+                        )}
+                      </Button>
+                      <div className="flex-1">
+                        <div className={`text-xs mb-3 ${selectedBackgroundTrack ? 'text-white/60' : 'text-white/30'}`}>
+                          Background Music Volume
+                        </div>
+                        <Slider
+                          value={[backgroundMusicVolume]}
+                          max={1}
+                          step={0.01}
+                          onValueChange={handleBackgroundMusicVolumeChange}
+                          className={`w-full ${!selectedBackgroundTrack ? 'opacity-50' : ''}`}
+                          disabled={!selectedBackgroundTrack}
+                        />
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>
