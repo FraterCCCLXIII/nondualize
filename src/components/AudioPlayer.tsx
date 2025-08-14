@@ -190,16 +190,12 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     const updateTime = () => setCurrentTime(audio.currentTime);
     const updateDuration = () => setDuration(audio.duration);
     const handlePlay = () => {
-      // Prevent duplicate state updates
-      if (!isPlaying) {
-        setIsPlaying(true);
-      }
+      console.log('Audio play event fired');
+      setIsPlaying(true);
     };
     const handlePause = () => {
-      // Prevent duplicate state updates
-      if (isPlaying) {
-        setIsPlaying(false);
-      }
+      console.log('Audio pause event fired');
+      setIsPlaying(false);
     };
     const handleEnded = () => handleNext();
     const handleError = (e: Event) => {
@@ -222,7 +218,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
     };
-  }, [currentTrack, isPlaying]);
+  }, [currentTrack]); // Removed isPlaying dependency to prevent listener recreation
 
   // Handle background music playback and volume
   useEffect(() => {
@@ -492,10 +488,13 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
   const handleTrackSelect = (trackIndex: number) => {
     console.log('handleTrackSelect called with index:', trackIndex);
+    console.log('Current audio element:', audioRef.current);
+    console.log('Current hasUserInteracted:', hasUserInteracted);
     
     // Stop current audio before switching tracks
     const audio = audioRef.current;
     if (audio) {
+      console.log('Stopping current audio, current src:', audio.src);
       audio.pause();
       audio.currentTime = 0;
       // Ensure audio is completely stopped
@@ -511,46 +510,49 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     
     setCurrentTrack(trackIndex);
     setCurrentTime(0);
-    // Don't reset playing state - keep it as true so new track can start
-    // setIsPlaying(false); // Removed this line
+    setIsPlaying(true); // Always set to playing when track is selected
+    console.log('Set isPlaying to true for track:', trackIndex);
     setIsDrawerOpen(false); // Ensure drawer closes on mobile
     updateTrackUrl(trackIndex);
     
     // Update the audio source for the new track
     if (audio) {
+      const newAudioUrl = mockTracks[trackIndex].audioUrl;
+      console.log('Setting new audio source:', newAudioUrl);
       // Set the new audio source
-      audio.src = mockTracks[trackIndex].audioUrl;
+      audio.src = newAudioUrl;
       audio.load(); // Ensure the audio is loaded
       
-      // If user has interacted with audio before, try to play immediately
-      if (hasUserInteracted) {
-        setTimeout(() => {
-          if (audio && audio.readyState >= 2) {
+      // Always try to play the track when selected
+      setTimeout(() => {
+        console.log('Attempting to play audio after timeout');
+        console.log('Audio readyState:', audio.readyState);
+        console.log('Audio src:', audio.src);
+        
+        if (audio && audio.readyState >= 2) {
+          console.log('Audio ready, attempting to play');
+          audio.play().then(() => {
+            console.log('Track started playing successfully');
+            // Audio will start playing, event listeners will update isPlaying state
+          }).catch((error) => {
+            console.log('Auto-play prevented by browser:', error);
+            // If auto-play fails, set playing state to false
+            setIsPlaying(false);
+          });
+        } else {
+          console.log('Audio not ready, waiting for canplay event');
+          // If audio isn't ready, wait for it to load
+          audio.addEventListener('canplay', () => {
+            console.log('Canplay event fired, attempting to play');
             audio.play().then(() => {
-              console.log('Track started playing successfully');
-              // Audio will start playing, event listeners will update isPlaying state
+              console.log('Track started playing after loading');
             }).catch((error) => {
-              console.log('Auto-play prevented by browser:', error);
-              // If auto-play fails, set playing state to false
+              console.log('Play failed after loading:', error);
               setIsPlaying(false);
             });
-          } else {
-            // If audio isn't ready, wait for it to load
-            audio.addEventListener('canplay', () => {
-              audio.play().then(() => {
-                console.log('Track started playing after loading');
-              }).catch((error) => {
-                console.log('Play failed after loading:', error);
-                setIsPlaying(false);
-              });
-            }, { once: true });
-          }
-        }, 200); // Increased delay to ensure audio element is fully updated
-      } else {
-        // If user hasn't interacted yet, just prepare the audio
-        console.log('User has not interacted with audio yet, preparing track for playback');
-        setIsPlaying(false);
-      }
+          }, { once: true });
+        }
+      }, 200); // Increased delay to ensure audio element is fully updated
     }
 
     // Activate default background music
