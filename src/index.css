@@ -2,18 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Safe area utilities for mobile - temporarily disabled to debug mobile issues */
-/*
+/* Mobile safe area utilities */
 @supports (padding: max(0px)) {
-  .pb-safe {
-    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
-  }
-  
-  .pt-safe {
-    padding-top: max(1rem, env(safe-area-inset-top));
+  .pb-safe-mobile {
+    padding-bottom: max(3rem, env(safe-area-inset-bottom) + 2rem);
   }
 }
-*/
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.

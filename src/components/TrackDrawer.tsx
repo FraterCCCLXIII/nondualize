@@ -152,8 +152,8 @@ export function TrackDrawer({
           </div>
 
           {/* Track List */}
-          <ScrollArea className="h-[calc(100vh-200px)]">
-            <div className="p-4">
+          <ScrollArea className="h-[calc(100vh-260px)]">
+            <div className="p-6 pb-16">
               {tracks.map((track, index) => (
                 <div
                   key={track.id}
