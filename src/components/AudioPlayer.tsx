@@ -10,6 +10,23 @@ import { ShareModal } from "./ShareModal";
 import { parseSrtFile, type Caption } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
+// Singleton AudioContext to prevent multiple instances in production
+let globalAudioContext: AudioContext | null = null;
+const getAudioContext = (): AudioContext | null => {
+  if (typeof window === 'undefined') return null;
+  
+  if (!globalAudioContext && ('AudioContext' in window || 'webkitAudioContext' in window)) {
+    try {
+      globalAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    } catch (e) {
+      console.warn('Failed to create AudioContext:', e);
+      return null;
+    }
+  }
+  
+  return globalAudioContext;
+};
+
 interface Track {
   id: string;
   title: string;
@@ -208,11 +225,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         
         // Try to create audio context for mobile browsers
         try {
-          if (typeof window !== 'undefined' && 'AudioContext' in window) {
-            const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-            if (audioContext.state === 'suspended') {
-              // Audio context is suspended, will resume on user interaction
-            }
+          const audioContext = getAudioContext();
+          if (audioContext && audioContext.state === 'suspended') {
+            // Audio context is suspended, will resume on user interaction
           }
         } catch (e) {
           // Audio context not available
@@ -384,14 +399,12 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     // Resume audio context if suspended (important for mobile/production)
     const resumeAudioContext = async () => {
       try {
-        if (typeof window !== 'undefined' && 'AudioContext' in window) {
-          const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-          if (audioContext.state === 'suspended') {
-            await audioContext.resume();
-          }
+        const audioContext = getAudioContext();
+        if (audioContext && audioContext.state === 'suspended') {
+          await audioContext.resume();
         }
       } catch (e) {
-        // Audio context resume failed
+        console.warn('Audio context resume failed:', e);
       }
     };
 
@@ -478,20 +491,19 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       // Mark user interaction for mobile browsers
       setHasUserInteracted(true);
       
-      // Auto-play the new track if it was playing before OR if autoPlay is requested
-      if (isPlaying || autoPlay) {
+      // Only auto-play if explicitly requested (like when a track ends naturally)
+      // Do NOT auto-play when user manually clicks next/previous buttons
+      if (autoPlay) {
         const playPrevTrack = async () => {
           
           // Resume audio context if suspended (important for mobile/production)
           try {
-            if (typeof window !== 'undefined' && 'AudioContext' in window) {
-              const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-              if (audioContext.state === 'suspended') {
-                await audioContext.resume();
-              }
+            const audioContext = getAudioContext();
+            if (audioContext && audioContext.state === 'suspended') {
+              await audioContext.resume();
             }
           } catch (e) {
-            // Audio context resume failed
+            console.warn('Audio context resume failed:', e);
           }
           
           audio.play().then(() => {
@@ -542,20 +554,19 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       // Mark user interaction for mobile browsers
       setHasUserInteracted(true);
       
-      // Auto-play the new track if it was playing before OR if autoPlay is requested
-      if (isPlaying || autoPlay) {
+      // Only auto-play if explicitly requested (like when a track ends naturally)
+      // Do NOT auto-play when user manually clicks next/previous buttons
+      if (autoPlay) {
         const playNextTrack = async () => {
           
           // Resume audio context if suspended (important for mobile/production)
           try {
-            if (typeof window !== 'undefined' && 'AudioContext' in window) {
-              const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-              if (audioContext.state === 'suspended') {
-                await audioContext.resume();
-              }
+            const audioContext = getAudioContext();
+            if (audioContext && audioContext.state === 'suspended') {
+              await audioContext.resume();
             }
           } catch (e) {
-            // Audio context resume failed
+            console.warn('Audio context resume failed:', e);
           }
           
           audio.play().then(() => {
@@ -651,14 +662,12 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         
         // Resume audio context if suspended (important for mobile/production)
         try {
-          if (typeof window !== 'undefined' && 'AudioContext' in window) {
-            const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-            if (audioContext.state === 'suspended') {
-              await audioContext.resume();
-            }
+          const audioContext = getAudioContext();
+          if (audioContext && audioContext.state === 'suspended') {
+            await audioContext.resume();
           }
         } catch (e) {
-          // Audio context resume failed for selected track
+          console.warn('Audio context resume failed for selected track:', e);
         }
         
         audio.play().then(() => {
