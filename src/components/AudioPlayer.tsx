@@ -211,11 +211,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           if (typeof window !== 'undefined' && 'AudioContext' in window) {
             const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
             if (audioContext.state === 'suspended') {
-              console.log('Audio context suspended, will resume on user interaction');
+              // Audio context is suspended, will resume on user interaction
             }
           }
         } catch (e) {
-          console.log('Audio context not available:', e);
+          // Audio context not available
         }
       }
       
@@ -268,24 +268,15 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   // Handle background music playback and volume
   useEffect(() => {
     const backgroundAudio = backgroundAudioRef.current;
-    console.log('Background music useEffect triggered:', {
-      backgroundAudio: !!backgroundAudio,
-      isBackgroundMusicPlaying,
-      backgroundMusic,
-      hasSource: backgroundAudio?.src
-    });
     
     if (!backgroundAudio) return;
 
     if (isBackgroundMusicPlaying && backgroundMusic) {
       // Don't set volume here - let the volume handlers manage it
       // backgroundAudio.volume = volume * backgroundMusicVolume;
-      console.log('Attempting to play background music:', backgroundMusic);
       backgroundAudio.play().catch((error) => {
-        console.log('Background music auto-play prevented:', error);
       });
     } else {
-      console.log('Pausing background music');
       backgroundAudio.pause();
     }
   }, [backgroundMusic, isBackgroundMusicPlaying]); // Keep backgroundMusic dependency for playback
@@ -297,13 +288,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     
     if (audio) {
       audio.volume = volume;
-      console.log('Applied volume to main audio:', volume);
     }
     
     if (backgroundAudio && backgroundMusic) {
       const bgVolume = volume * backgroundMusicVolume;
       backgroundAudio.volume = bgVolume;
-      console.log('Applied volume to background audio:', bgVolume);
     }
   }, [volume, backgroundMusicVolume, backgroundMusic]);
 
@@ -347,7 +336,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         // No captions found
         setCaptions([]);
       } catch (error) {
-        console.log('Error loading captions:', error);
         setCaptions([]);
       }
     };
@@ -366,7 +354,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
   // Centralized function to stop all audio playback
   const stopAllAudio = () => {
-    console.log('Stopping all audio playback');
     
     // Stop main audio
     const audio = audioRef.current;
@@ -401,17 +388,15 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
           if (audioContext.state === 'suspended') {
             await audioContext.resume();
-            console.log('Audio context resumed');
           }
         }
       } catch (e) {
-        console.log('Audio context resume failed:', e);
+        // Audio context resume failed
       }
     };
 
     if (isPlaying) {
       // Pause current audio and background music
-      console.log('Pausing audio playback');
       audio.pause();
       setIsPlaying(false);
       
@@ -436,11 +421,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           audio.load();
         }
         
-        console.log('Starting audio playback');
         setIsPlaying(true);
         
         audio.play().then(() => {
-          console.log('Audio started playing successfully');
           
           // If background music is enabled and should be active, activate the default background music
           if (isBackgroundMusicPlaying && autoActivateBackgroundMusic && !backgroundMusic) {
@@ -450,7 +433,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           // If background music is set but not playing, try to start it now (user interaction allows it)
           if (backgroundMusic && isBackgroundMusicPlaying && backgroundAudioRef.current) {
             backgroundAudioRef.current.play().catch((error) => {
-              console.log('Background music play failed:', error);
             });
           }
         }).catch((error) => {
@@ -478,7 +460,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const handlePrevious = (autoPlay: boolean = false) => {
     const newTrackIndex = currentTrack === 0 ? mockTracks.length - 1 : currentTrack - 1;
     
-    console.log('handlePrevious called:', { newTrackIndex, isPlaying, autoPlay });
     
     // Stop all audio immediately using centralized function
     stopAllAudio();
@@ -500,7 +481,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       // Auto-play the new track if it was playing before OR if autoPlay is requested
       if (isPlaying || autoPlay) {
         const playPrevTrack = async () => {
-          console.log('Playing previous track:', mockTracks[newTrackIndex].title);
           
           // Resume audio context if suspended (important for mobile/production)
           try {
@@ -508,15 +488,13 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
               const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
               if (audioContext.state === 'suspended') {
                 await audioContext.resume();
-                console.log('Audio context resumed for previous track');
               }
             }
           } catch (e) {
-            console.log('Audio context resume failed for previous track:', e);
+            // Audio context resume failed
           }
           
           audio.play().then(() => {
-            console.log('Previous track started playing successfully');
             // Note: setIsPlaying(true) is handled by the 'play' event listener
             
             // Handle background music for the new track
@@ -546,7 +524,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const handleNext = (autoPlay: boolean = false) => {
     const newTrackIndex = currentTrack === mockTracks.length - 1 ? 0 : currentTrack + 1;
     
-    console.log('handleNext called:', { newTrackIndex, isPlaying, autoPlay });
     
     // Stop all audio immediately using centralized function
     stopAllAudio();
@@ -568,7 +545,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       // Auto-play the new track if it was playing before OR if autoPlay is requested
       if (isPlaying || autoPlay) {
         const playNextTrack = async () => {
-          console.log('Playing next track:', mockTracks[newTrackIndex].title);
           
           // Resume audio context if suspended (important for mobile/production)
           try {
@@ -576,15 +552,13 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
               const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
               if (audioContext.state === 'suspended') {
                 await audioContext.resume();
-                console.log('Audio context resumed for next track');
               }
             }
           } catch (e) {
-            console.log('Audio context resume failed for next track:', e);
+            // Audio context resume failed
           }
           
           audio.play().then(() => {
-            console.log('Next track started playing successfully');
             // Note: setIsPlaying(true) is handled by the 'play' event listener
             
             // Handle background music for the new track
@@ -645,14 +619,12 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         if (backgroundAudio) {
           backgroundAudio.src = bgTrack.audioUrl;
           backgroundAudio.load();
-          console.log('Background music source updated to:', bgTrack.audioUrl);
         }
       }
     }
   };
 
   const handleTrackSelect = (trackIndex: number) => {
-    console.log('handleTrackSelect called with index:', trackIndex);
     
     // Stop all audio immediately using centralized function
     stopAllAudio();
@@ -666,7 +638,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     const audio = audioRef.current;
     if (audio) {
       const newAudioUrl = mockTracks[trackIndex].audioUrl;
-      console.log('Setting new audio source:', newAudioUrl);
       
       // Set the new audio source immediately
       audio.src = newAudioUrl;
@@ -677,7 +648,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       
       // Try to play the track when selected (user explicitly selected it)
       const playNewTrack = async () => {
-        console.log('Starting selected track playback');
         
         // Resume audio context if suspended (important for mobile/production)
         try {
@@ -685,15 +655,13 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
             if (audioContext.state === 'suspended') {
               await audioContext.resume();
-              console.log('Audio context resumed for selected track');
             }
           }
         } catch (e) {
-          console.log('Audio context resume failed for selected track:', e);
+          // Audio context resume failed for selected track
         }
         
         audio.play().then(() => {
-          console.log('Selected track started playing successfully');
           // Note: setIsPlaying(true) is handled by the 'play' event listener
           
           // Activate default background music if background music is currently playing
@@ -726,12 +694,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   };
 
   const handleVolumeChange = (value: number[]) => {
-    console.log('Volume change called with value:', value);
-    console.log('Current audio element:', audioRef.current);
-    console.log('Current background audio element:', backgroundAudioRef.current);
     
     const newVolume = value[0];
-    console.log('Setting volume to:', newVolume);
     
     setVolume(newVolume);
     
@@ -747,13 +711,13 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         if (Math.abs(audio.volume - newVolume) > 0.01) {
           console.warn('Browser does not support volume control');
         } else {
-          console.log('Main audio volume set to:', audio.volume);
+          // Main audio element not found
         }
       } catch (error) {
         console.warn('Volume control not supported:', error);
       }
     } else {
-      console.log('Main audio element not found');
+      // Background audio element not found
     }
     
     // Update background music volume to 75% of main volume
@@ -762,12 +726,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       try {
         const bgVolume = newVolume * 0.75;
         backgroundAudio.volume = bgVolume;
-        console.log('Background audio volume set to:', bgVolume);
       } catch (error) {
         console.warn('Background volume control not supported:', error);
       }
     } else {
-      console.log('Background audio element not found');
+      // Background audio element not found
     }
   };
 
@@ -819,21 +782,16 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   };
 
   const handleBackgroundMusicVolumeChange = (value: number[]) => {
-    console.log('Background music volume change called with value:', value);
-    console.log('Current background audio element:', backgroundAudioRef.current);
-    console.log('Current main volume:', volume);
     
     const newVolume = value[0];
-    console.log('Setting background music volume to:', newVolume);
     
     setBackgroundMusicVolume(newVolume);
     
     if (backgroundAudioRef.current) {
       const finalVolume = newVolume * volume;
       backgroundAudioRef.current.volume = finalVolume;
-      console.log('Background audio volume set to:', finalVolume);
     } else {
-      console.log('Background audio element not found');
+      // Background audio element not found
     }
   };
 
@@ -908,10 +866,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           console.error('Audio src:', track.audioUrl);
         }}
         onLoadStart={() => {
-          console.log('Audio load started');
         }}
         onCanPlay={() => {
-          console.log('Audio can play');
         }}
       />
       

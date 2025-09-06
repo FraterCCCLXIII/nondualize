@@ -56,7 +56,6 @@ export function TrackDrawer({
 
   // Debug: Log when component receives props
   useEffect(() => {
-    console.log('TrackDrawer props:', { isOpen, currentTrack, isPlaying, onTrackSelect: typeof onTrackSelect });
   }, [isOpen, currentTrack, isPlaying, onTrackSelect]);
 
   const formatDuration = (seconds: number) => {
@@ -195,9 +194,6 @@ export function TrackDrawer({
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('Track clicked:', index, track.title);
-                        console.log('onTrackSelect function:', onTrackSelect);
-                        console.log('Event target:', e.target);
                         if (typeof onTrackSelect === 'function') {
                           onTrackSelect(index);
                         } else {
