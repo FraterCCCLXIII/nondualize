@@ -204,7 +204,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         // Try to create audio context for mobile browsers
         try {
           if (typeof window !== 'undefined' && 'AudioContext' in window) {
-            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
             if (audioContext.state === 'suspended') {
               console.log('Audio context suspended, will resume on user interaction');
             }
@@ -498,7 +498,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           
           audio.play().then(() => {
             console.log('Previous track started playing successfully');
-            setIsPlaying(true);
+            // Note: setIsPlaying(true) is handled by the 'play' event listener
             
             // Handle background music for the new track
             if (isBackgroundMusicPlaying) {
@@ -553,7 +553,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           
           audio.play().then(() => {
             console.log('Next track started playing successfully');
-            setIsPlaying(true);
+            // Note: setIsPlaying(true) is handled by the 'play' event listener
             
             // Handle background music for the new track
             if (isBackgroundMusicPlaying) {
@@ -649,7 +649,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         
         audio.play().then(() => {
           console.log('Selected track started playing successfully');
-          setIsPlaying(true);
+          // Note: setIsPlaying(true) is handled by the 'play' event listener
           
           // Activate default background music if background music is currently playing
           if (isBackgroundMusicPlaying) {
