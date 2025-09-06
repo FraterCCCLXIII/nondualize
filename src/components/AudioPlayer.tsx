@@ -471,9 +471,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
   const handlePrevious = (autoPlay: boolean = false) => {
     const newTrackIndex = currentTrack === 0 ? mockTracks.length - 1 : currentTrack - 1;
-    const wasPlaying = isPlaying; // Store the current playing state
     
-    console.log('handlePrevious called:', { newTrackIndex, wasPlaying, autoPlay });
+    console.log('handlePrevious called:', { newTrackIndex, isPlaying, autoPlay });
     
     // Stop all audio immediately using centralized function
     stopAllAudio();
@@ -493,13 +492,13 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       setHasUserInteracted(true);
       
       // Auto-play the new track if it was playing before OR if autoPlay is requested
-      if (wasPlaying || autoPlay) {
+      if (isPlaying || autoPlay) {
         const playPrevTrack = () => {
           console.log('Starting previous track playback');
-          setIsPlaying(true);
           
           audio.play().then(() => {
             console.log('Previous track started playing successfully');
+            setIsPlaying(true);
             
             // Handle background music for the new track
             if (isBackgroundMusicPlaying) {
@@ -527,9 +526,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
   const handleNext = (autoPlay: boolean = false) => {
     const newTrackIndex = currentTrack === mockTracks.length - 1 ? 0 : currentTrack + 1;
-    const wasPlaying = isPlaying; // Store the current playing state
     
-    console.log('handleNext called:', { newTrackIndex, wasPlaying, autoPlay });
+    console.log('handleNext called:', { newTrackIndex, isPlaying, autoPlay });
     
     // Stop all audio immediately using centralized function
     stopAllAudio();
@@ -549,13 +547,13 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       setHasUserInteracted(true);
       
       // Auto-play the new track if it was playing before OR if autoPlay is requested
-      if (wasPlaying || autoPlay) {
+      if (isPlaying || autoPlay) {
         const playNextTrack = () => {
           console.log('Starting next track playback');
-          setIsPlaying(true);
           
           audio.play().then(() => {
             console.log('Next track started playing successfully');
+            setIsPlaying(true);
             
             // Handle background music for the new track
             if (isBackgroundMusicPlaying) {
@@ -648,10 +646,10 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       // Try to play the track when selected (user explicitly selected it)
       const playNewTrack = () => {
         console.log('Starting selected track playback');
-        setIsPlaying(true);
         
         audio.play().then(() => {
           console.log('Selected track started playing successfully');
+          setIsPlaying(true);
           
           // Activate default background music if background music is currently playing
           if (isBackgroundMusicPlaying) {
