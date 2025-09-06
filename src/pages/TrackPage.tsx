@@ -17,13 +17,17 @@ export function TrackPage() {
       "realigning-the-soul": 6,
       "rational-idealism": 7,
     };
-    return trackMap[slug] || 0;
+    return trackMap[slug];
   };
 
   const trackIndex = getTrackIndexFromSlug(trackSlug || "");
 
+  // Debug logging for routing issues
+  console.log('TrackPage - trackSlug:', trackSlug, 'trackIndex:', trackIndex);
+
   // If invalid slug, redirect to home
   if (!trackSlug || trackIndex === undefined) {
+    console.log('TrackPage - Invalid slug, redirecting to home');
     navigate("/");
     return null;
   }
