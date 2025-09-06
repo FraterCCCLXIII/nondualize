@@ -51,6 +51,31 @@
     display: none !important;
   }
   
+  /* More aggressive fix for duplicate thumbs */
+  [data-radix-slider-thumb] {
+    position: relative !important;
+  }
+  
+  [data-radix-slider-thumb]:after {
+    content: none !important;
+  }
+  
+  [data-radix-slider-thumb]:before {
+    content: none !important;
+  }
+  
+  /* Ensure timeline slider has only one thumb */
+  .slider-thumb [data-radix-slider-thumb] {
+    position: absolute !important;
+    left: 0 !important;
+  }
+  
+  .slider-thumb [data-radix-slider-thumb]:not(:first-child) {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+  }
+  
   /* Improve button touch targets on mobile */
   button {
     min-height: 44px;

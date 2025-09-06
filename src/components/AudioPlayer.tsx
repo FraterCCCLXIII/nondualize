@@ -218,6 +218,32 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     initMobileAudio();
   }, [hasUserInteracted, volume]);
 
+  // Mobile-specific audio event handling
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Mobile browsers need special handling for audio events
+    const handleMobilePlay = () => {
+      console.log('Mobile audio play event fired');
+      setIsPlaying(true);
+    };
+    
+    const handleMobilePause = () => {
+      console.log('Mobile audio pause event fired');
+      setIsPlaying(false);
+    };
+
+    // Add mobile-specific event listeners
+    audio.addEventListener('play', handleMobilePlay);
+    audio.addEventListener('pause', handleMobilePause);
+    
+    return () => {
+      audio.removeEventListener('play', handleMobilePlay);
+      audio.removeEventListener('pause', handleMobilePause);
+    };
+  }, [currentTrack]);
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
