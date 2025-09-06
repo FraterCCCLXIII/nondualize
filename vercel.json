@@ -5,7 +5,7 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api|assets|audio|background-music|transcripts|robots.txt|placeholder.svg).*)",
       "destination": "/index.html"
     }
   ],
