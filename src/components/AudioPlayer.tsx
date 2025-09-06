@@ -423,9 +423,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         // When user manually clicks previous, always start playing (autoPlay will be true from button click)
         if (wasPlaying || autoPlay) {
           const playPrevTrack = () => {
+            // Update playing state immediately before starting audio
+            setIsPlaying(true);
+            
             audio.play().then(() => {
               console.log('Previous track started playing successfully');
-              setIsPlaying(true);
               
               // If background music is enabled (has a selected track), start it too
               if (selectedBackgroundTrack && !isBackgroundMusicPlaying) {
@@ -506,9 +508,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         // When user manually clicks next, always start playing (autoPlay will be true from button click)
         if (wasPlaying || autoPlay) {
           const playNextTrack = () => {
+            // Update playing state immediately before starting audio
+            setIsPlaying(true);
+            
             audio.play().then(() => {
               console.log('Next track started playing successfully');
-              setIsPlaying(true);
               
               // If background music is enabled (has a selected track), start it too
               if (selectedBackgroundTrack && !isBackgroundMusicPlaying) {
@@ -685,18 +689,37 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     
     setVolume(newVolume);
     
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-      console.log('Main audio volume set to:', audioRef.current.volume);
+    // Check if browser supports volume control (some mobile browsers don't)
+    const audio = audioRef.current;
+    if (audio) {
+      try {
+        // Test if volume can be set (some mobile browsers ignore this)
+        const originalVolume = audio.volume;
+        audio.volume = newVolume;
+        
+        // Verify the volume was actually set
+        if (Math.abs(audio.volume - newVolume) > 0.01) {
+          console.warn('Browser does not support volume control');
+        } else {
+          console.log('Main audio volume set to:', audio.volume);
+        }
+      } catch (error) {
+        console.warn('Volume control not supported:', error);
+      }
     } else {
       console.log('Main audio element not found');
     }
     
     // Update background music volume to 75% of main volume
-    if (backgroundAudioRef.current) {
-      const bgVolume = newVolume * 0.75;
-      backgroundAudioRef.current.volume = bgVolume;
-      console.log('Background audio volume set to:', bgVolume);
+    const backgroundAudio = backgroundAudioRef.current;
+    if (backgroundAudio) {
+      try {
+        const bgVolume = newVolume * 0.75;
+        backgroundAudio.volume = bgVolume;
+        console.log('Background audio volume set to:', bgVolume);
+      } catch (error) {
+        console.warn('Background volume control not supported:', error);
+      }
     } else {
       console.log('Background audio element not found');
     }
@@ -940,8 +963,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                     max={1}
                     step={0.01}
                     onValueChange={handleVolumeChange}
-                    className="w-full slider-thumb touch-manipulation"
-                    style={{ touchAction: 'none' }}
+                    className="w-full slider-thumb"
                   />
                   <div className="text-xs text-white/60 text-center">
                     {Math.round(volume * 100)}%

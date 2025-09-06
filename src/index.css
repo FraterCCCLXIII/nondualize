@@ -36,6 +36,21 @@
     cursor: grab;
   }
   
+  /* Fix duplicate slider thumbs on mobile */
+  [data-radix-slider-thumb]:not(:first-child) {
+    display: none !important;
+  }
+  
+  /* Ensure only one thumb is visible */
+  [data-radix-slider-root] [data-radix-slider-thumb] + [data-radix-slider-thumb] {
+    display: none !important;
+  }
+  
+  /* Specific fix for timeline slider */
+  .slider-thumb [data-radix-slider-thumb]:nth-child(n+2) {
+    display: none !important;
+  }
+  
   /* Improve button touch targets on mobile */
   button {
     min-height: 44px;
