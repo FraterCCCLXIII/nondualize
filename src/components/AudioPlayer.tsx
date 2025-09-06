@@ -194,7 +194,17 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   // Initialize audio element with initial track
   useEffect(() => {
     const audio = audioRef.current;
+    console.log('🎵 [AUDIO SYNC] Initializing audio element:', {
+      hasAudio: !!audio,
+      currentSrc: audio?.src,
+      expectedSrc: track.audioUrl,
+      trackTitle: track.title,
+      trackIndex: currentTrack,
+      timestamp: new Date().toISOString()
+    });
+    
     if (audio && !audio.src) {
+      console.log('🎵 [AUDIO SYNC] Setting initial audio source and loading');
       audio.src = track.audioUrl;
       audio.load();
       
@@ -204,6 +214,21 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       // Add mobile-specific audio attributes
       audio.setAttribute('playsinline', 'true');
       audio.setAttribute('webkit-playsinline', 'true');
+      
+      console.log('🎵 [AUDIO SYNC] Audio element initialized:', {
+        src: audio.src,
+        preload: audio.preload,
+        playsinline: audio.getAttribute('playsinline'),
+        webkitPlaysinline: audio.getAttribute('webkit-playsinline'),
+        timestamp: new Date().toISOString()
+      });
+    } else if (audio && audio.src) {
+      console.log('🎵 [AUDIO SYNC] Audio element already has source:', {
+        src: audio.src,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      console.warn('🎵 [AUDIO SYNC] Audio element not found during initialization');
     }
   }, []); // Run once on mount
 
@@ -252,14 +277,87 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const updateTime = () => setCurrentTime(audio.currentTime);
-    const updateDuration = () => setDuration(audio.duration);
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
-    const handleEnded = () => handleNext(true);
+    const updateTime = () => {
+      const newTime = audio.currentTime;
+      console.log('🎵 [AUDIO SYNC] timeupdate event:', {
+        currentTime: newTime,
+        duration: audio.duration,
+        readyState: audio.readyState,
+        paused: audio.paused,
+        timestamp: new Date().toISOString()
+      });
+      setCurrentTime(newTime);
+    };
+    
+    const updateDuration = () => {
+      console.log('🎵 [AUDIO SYNC] loadedmetadata event:', {
+        duration: audio.duration,
+        src: audio.src,
+        readyState: audio.readyState,
+        timestamp: new Date().toISOString()
+      });
+      setDuration(audio.duration);
+    };
+    
+    const handlePlay = () => {
+      console.log('🎵 [AUDIO SYNC] play event fired:', {
+        currentTime: audio.currentTime,
+        duration: audio.duration,
+        src: audio.src,
+        readyState: audio.readyState,
+        timestamp: new Date().toISOString()
+      });
+      setIsPlaying(true);
+    };
+    
+    const handlePause = () => {
+      console.log('🎵 [AUDIO SYNC] pause event fired:', {
+        currentTime: audio.currentTime,
+        duration: audio.duration,
+        src: audio.src,
+        timestamp: new Date().toISOString()
+      });
+      setIsPlaying(false);
+    };
+    
+    const handleEnded = () => {
+      console.log('🎵 [AUDIO SYNC] ended event fired, calling handleNext(true)');
+      handleNext(true);
+    };
+    
     const handleError = (e: Event) => {
-      console.error('Audio error:', e);
-      console.error('Audio src:', audio.src);
+      console.error('🎵 [AUDIO SYNC] Audio error event:', {
+        error: e,
+        src: audio.src,
+        readyState: audio.readyState,
+        timestamp: new Date().toISOString()
+      });
+    };
+    
+    const handleLoadStart = () => {
+      console.log('🎵 [AUDIO SYNC] loadstart event:', {
+        src: audio.src,
+        readyState: audio.readyState,
+        timestamp: new Date().toISOString()
+      });
+    };
+    
+    const handleCanPlay = () => {
+      console.log('🎵 [AUDIO SYNC] canplay event:', {
+        src: audio.src,
+        readyState: audio.readyState,
+        duration: audio.duration,
+        timestamp: new Date().toISOString()
+      });
+    };
+    
+    const handleCanPlayThrough = () => {
+      console.log('🎵 [AUDIO SYNC] canplaythrough event:', {
+        src: audio.src,
+        readyState: audio.readyState,
+        duration: audio.duration,
+        timestamp: new Date().toISOString()
+      });
     };
 
     // Add all event listeners
@@ -269,6 +367,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
+    audio.addEventListener('loadstart', handleLoadStart);
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('canplaythrough', handleCanPlayThrough);
 
     return () => {
       audio.removeEventListener('timeupdate', updateTime);
@@ -277,6 +378,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
+      audio.removeEventListener('loadstart', handleLoadStart);
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('canplaythrough', handleCanPlayThrough);
     };
   }, [currentTrack]); // Removed isPlaying dependency to prevent listener recreation
 
@@ -284,14 +388,55 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   useEffect(() => {
     const backgroundAudio = backgroundAudioRef.current;
     
-    if (!backgroundAudio) return;
+    console.log('🎵 [AUDIO SYNC] Background music effect triggered:', {
+      hasBackgroundAudio: !!backgroundAudio,
+      isBackgroundMusicPlaying,
+      backgroundMusic,
+      backgroundAudioSrc: backgroundAudio?.src,
+      backgroundAudioPaused: backgroundAudio?.paused,
+      backgroundAudioCurrentTime: backgroundAudio?.currentTime,
+      backgroundAudioReadyState: backgroundAudio?.readyState,
+      timestamp: new Date().toISOString()
+    });
+    
+    if (!backgroundAudio) {
+      console.warn('🎵 [AUDIO SYNC] Background audio element not found');
+      return;
+    }
 
     if (isBackgroundMusicPlaying && backgroundMusic) {
+      console.log('🎵 [AUDIO SYNC] Attempting to play background music:', {
+        src: backgroundAudio.src,
+        readyState: backgroundAudio.readyState,
+        currentTime: backgroundAudio.currentTime,
+        paused: backgroundAudio.paused,
+        timestamp: new Date().toISOString()
+      });
+      
       // Don't set volume here - let the volume handlers manage it
       // backgroundAudio.volume = volume * backgroundMusicVolume;
-      backgroundAudio.play().catch((error) => {
+      backgroundAudio.play().then(() => {
+        console.log('🎵 [AUDIO SYNC] Background music play() promise resolved:', {
+          src: backgroundAudio.src,
+          currentTime: backgroundAudio.currentTime,
+          paused: backgroundAudio.paused,
+          timestamp: new Date().toISOString()
+        });
+      }).catch((error) => {
+        console.error('🎵 [AUDIO SYNC] Background music play() failed:', {
+          error,
+          src: backgroundAudio.src,
+          readyState: backgroundAudio.readyState,
+          timestamp: new Date().toISOString()
+        });
       });
     } else {
+      console.log('🎵 [AUDIO SYNC] Pausing background music:', {
+        reason: !isBackgroundMusicPlaying ? 'isBackgroundMusicPlaying is false' : 'no backgroundMusic',
+        src: backgroundAudio.src,
+        currentTime: backgroundAudio.currentTime,
+        timestamp: new Date().toISOString()
+      });
       backgroundAudio.pause();
     }
   }, [backgroundMusic, isBackgroundMusicPlaying]); // Keep backgroundMusic dependency for playback
@@ -369,22 +514,55 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
   // Centralized function to stop all audio playback
   const stopAllAudio = () => {
+    console.log('🎵 [AUDIO SYNC] stopAllAudio called:', {
+      currentTrack,
+      trackTitle: track.title,
+      isPlaying,
+      currentTime,
+      audioSrc: audioRef.current?.src,
+      audioCurrentTime: audioRef.current?.currentTime,
+      audioPaused: audioRef.current?.paused,
+      backgroundMusic,
+      backgroundAudioSrc: backgroundAudioRef.current?.src,
+      backgroundAudioCurrentTime: backgroundAudioRef.current?.currentTime,
+      backgroundAudioPaused: backgroundAudioRef.current?.paused,
+      timestamp: new Date().toISOString()
+    });
     
     // Stop main audio
     const audio = audioRef.current;
     if (audio) {
+      console.log('🎵 [AUDIO SYNC] Stopping main audio:', {
+        src: audio.src,
+        currentTime: audio.currentTime,
+        paused: audio.paused,
+        readyState: audio.readyState,
+        timestamp: new Date().toISOString()
+      });
       audio.pause();
       audio.currentTime = 0;
+    } else {
+      console.warn('🎵 [AUDIO SYNC] Main audio element not found in stopAllAudio');
     }
     
     // Stop background audio
     const backgroundAudio = backgroundAudioRef.current;
     if (backgroundAudio) {
+      console.log('🎵 [AUDIO SYNC] Stopping background audio:', {
+        src: backgroundAudio.src,
+        currentTime: backgroundAudio.currentTime,
+        paused: backgroundAudio.paused,
+        readyState: backgroundAudio.readyState,
+        timestamp: new Date().toISOString()
+      });
       backgroundAudio.pause();
       backgroundAudio.currentTime = 0;
+    } else {
+      console.log('🎵 [AUDIO SYNC] Background audio element not found in stopAllAudio');
     }
     
     // Update state to reflect stopped audio
+    console.log('🎵 [AUDIO SYNC] Updating state to reflect stopped audio');
     setIsPlaying(false);
     setCurrentTime(0);
   };
@@ -392,6 +570,19 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio) return;
+
+    console.log('🎵 [AUDIO SYNC] togglePlay called:', {
+      isPlaying,
+      currentTrack,
+      trackTitle: track.title,
+      audioSrc: audio.src,
+      audioReadyState: audio.readyState,
+      audioCurrentTime: audio.currentTime,
+      audioPaused: audio.paused,
+      backgroundMusic,
+      isBackgroundMusicPlaying,
+      timestamp: new Date().toISOString()
+    });
 
     // Mark that user has interacted with audio
     setHasUserInteracted(true);
@@ -401,64 +592,96 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       try {
         const audioContext = getAudioContext();
         if (audioContext && audioContext.state === 'suspended') {
+          console.log('🎵 [AUDIO SYNC] Resuming suspended audio context in togglePlay');
           await audioContext.resume();
+          console.log('🎵 [AUDIO SYNC] Audio context resumed successfully in togglePlay');
+        } else {
+          console.log('🎵 [AUDIO SYNC] Audio context state in togglePlay:', audioContext?.state);
         }
       } catch (e) {
-        console.warn('Audio context resume failed:', e);
+        console.warn('🎵 [AUDIO SYNC] Audio context resume failed in togglePlay:', e);
       }
     };
 
     if (isPlaying) {
+      console.log('🎵 [AUDIO SYNC] Pausing audio and background music');
       // Pause current audio and background music
       audio.pause();
       setIsPlaying(false);
       
       // Pause background music if it's active
       if (backgroundAudioRef.current && isBackgroundMusicPlaying) {
+        console.log('🎵 [AUDIO SYNC] Pausing background music');
         backgroundAudioRef.current.pause();
       }
     } else {
+      console.log('🎵 [AUDIO SYNC] Starting audio playback');
       // Resume audio context first
       resumeAudioContext();
       
       // Ensure audio has the correct source and is loaded
       if (audio.src !== track.audioUrl) {
+        console.log('🎵 [AUDIO SYNC] Audio source mismatch, updating:', {
+          currentSrc: audio.src,
+          expectedSrc: track.audioUrl,
+          timestamp: new Date().toISOString()
+        });
         audio.src = track.audioUrl;
         audio.load();
       }
 
       // For mobile browsers, we need to ensure the audio is properly loaded and ready
       const playAudio = () => {
+        console.log('🎵 [AUDIO SYNC] playAudio function called:', {
+          audioReadyState: audio.readyState,
+          audioSrc: audio.src,
+          audioCurrentTime: audio.currentTime,
+          timestamp: new Date().toISOString()
+        });
+        
         // Force load the audio if it's not ready
         if (audio.readyState < 2) {
+          console.log('🎵 [AUDIO SYNC] Audio not ready, forcing load');
           audio.load();
         }
         
         setIsPlaying(true);
         
         audio.play().then(() => {
+          console.log('🎵 [AUDIO SYNC] Main audio play() promise resolved in togglePlay:', {
+            audioCurrentTime: audio.currentTime,
+            audioPaused: audio.paused,
+            audioDuration: audio.duration,
+            timestamp: new Date().toISOString()
+          });
           
           // If background music is enabled and should be active, activate the default background music
           if (isBackgroundMusicPlaying && autoActivateBackgroundMusic && !backgroundMusic) {
+            console.log('🎵 [AUDIO SYNC] Activating default background music in togglePlay');
             activateDefaultBackgroundMusic(currentTrack);
           }
           
           // If background music is set but not playing, try to start it now (user interaction allows it)
           if (backgroundMusic && isBackgroundMusicPlaying && backgroundAudioRef.current) {
-            backgroundAudioRef.current.play().catch((error) => {
+            console.log('🎵 [AUDIO SYNC] Starting existing background music in togglePlay');
+            backgroundAudioRef.current.play().then(() => {
+              console.log('🎵 [AUDIO SYNC] Background music started successfully in togglePlay');
+            }).catch((error) => {
+              console.error('🎵 [AUDIO SYNC] Background music start failed in togglePlay:', error);
             });
           }
         }).catch((error) => {
-          console.error('Audio play failed:', error);
+          console.error('🎵 [AUDIO SYNC] Audio play failed in togglePlay:', error);
           setIsPlaying(false);
           
           // On mobile, if play fails, try to load and play again
           audio.load();
           setTimeout(() => {
             audio.play().then(() => {
+              console.log('🎵 [AUDIO SYNC] Audio retry successful in togglePlay');
               setIsPlaying(true);
             }).catch((retryError) => {
-              console.error('Audio retry play failed:', retryError);
+              console.error('🎵 [AUDIO SYNC] Audio retry play failed in togglePlay:', retryError);
               setIsPlaying(false);
             });
           }, 100);
@@ -536,6 +759,20 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const handleNext = (autoPlay: boolean = false) => {
     const newTrackIndex = currentTrack === mockTracks.length - 1 ? 0 : currentTrack + 1;
     
+    console.log('🎵 [AUDIO SYNC] handleNext called:', {
+      autoPlay,
+      currentTrack,
+      newTrackIndex,
+      currentTrackTitle: mockTracks[currentTrack]?.title,
+      newTrackTitle: mockTracks[newTrackIndex]?.title,
+      isPlaying,
+      currentTime,
+      audioReadyState: audioRef.current?.readyState,
+      audioSrc: audioRef.current?.src,
+      backgroundMusic,
+      isBackgroundMusicPlaying,
+      timestamp: new Date().toISOString()
+    });
     
     // Stop all audio immediately using centralized function
     stopAllAudio();
@@ -544,6 +781,12 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     setCurrentTrack(newTrackIndex);
     updateTrackUrl(newTrackIndex);
     
+    console.log('🎵 [AUDIO SYNC] Track state updated:', {
+      newTrackIndex,
+      newTrackUrl: mockTracks[newTrackIndex]?.audioUrl,
+      timestamp: new Date().toISOString()
+    });
+    
     // Load and potentially play the new track
     const audio = audioRef.current;
     if (audio) {
@@ -551,48 +794,83 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       audio.src = mockTracks[newTrackIndex].audioUrl;
       audio.load();
       
+      console.log('🎵 [AUDIO SYNC] Audio source set and loaded:', {
+        newSrc: audio.src,
+        readyState: audio.readyState,
+        timestamp: new Date().toISOString()
+      });
+      
       // Mark user interaction for mobile browsers
       setHasUserInteracted(true);
       
       // Only auto-play if explicitly requested (like when a track ends naturally)
       // Do NOT auto-play when user manually clicks next/previous buttons
       if (autoPlay) {
+        console.log('🎵 [AUDIO SYNC] Auto-play requested, preparing to play next track');
+        
         const playNextTrack = async () => {
+          console.log('🎵 [AUDIO SYNC] playNextTrack function called:', {
+            audioReadyState: audio.readyState,
+            audioSrc: audio.src,
+            audioCurrentTime: audio.currentTime,
+            audioPaused: audio.paused,
+            timestamp: new Date().toISOString()
+          });
           
           // Resume audio context if suspended (important for mobile/production)
           try {
             const audioContext = getAudioContext();
             if (audioContext && audioContext.state === 'suspended') {
+              console.log('🎵 [AUDIO SYNC] Resuming suspended audio context');
               await audioContext.resume();
+              console.log('🎵 [AUDIO SYNC] Audio context resumed successfully');
+            } else {
+              console.log('🎵 [AUDIO SYNC] Audio context state:', audioContext?.state);
             }
           } catch (e) {
-            console.warn('Audio context resume failed:', e);
+            console.warn('🎵 [AUDIO SYNC] Audio context resume failed:', e);
           }
           
+          console.log('🎵 [AUDIO SYNC] Attempting to play audio...');
           audio.play().then(() => {
+            console.log('🎵 [AUDIO SYNC] Audio play() promise resolved successfully:', {
+              audioCurrentTime: audio.currentTime,
+              audioPaused: audio.paused,
+              audioDuration: audio.duration,
+              timestamp: new Date().toISOString()
+            });
+            
             // Note: setIsPlaying(true) is handled by the 'play' event listener
             
             // Handle background music for the new track
             if (isBackgroundMusicPlaying) {
+              console.log('🎵 [AUDIO SYNC] Activating default background music for new track');
               activateDefaultBackgroundMusic(newTrackIndex);
             }
           }).catch((error) => {
-            console.error('Next track play failed:', error);
+            console.error('🎵 [AUDIO SYNC] Next track play failed:', error);
             setIsPlaying(false);
           });
         };
         
         // Check if audio is ready to play, or wait for it
         if (audio.readyState >= 2) {
+          console.log('🎵 [AUDIO SYNC] Audio ready, calling playNextTrack immediately');
           playNextTrack();
         } else {
+          console.log('🎵 [AUDIO SYNC] Audio not ready, waiting for canplay event');
           const handleCanPlay = () => {
+            console.log('🎵 [AUDIO SYNC] canplay event fired, removing listener and playing');
             audio.removeEventListener('canplay', handleCanPlay);
             playNextTrack();
           };
           audio.addEventListener('canplay', handleCanPlay);
         }
+      } else {
+        console.log('🎵 [AUDIO SYNC] Auto-play not requested, track loaded but not playing');
       }
+    } else {
+      console.error('🎵 [AUDIO SYNC] Audio element not found!');
     }
   };
 
@@ -611,12 +889,35 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const activateDefaultBackgroundMusic = (trackIndex: number) => {
     const track = mockTracks[trackIndex];
     
+    console.log('🎵 [AUDIO SYNC] activateDefaultBackgroundMusic called:', {
+      trackIndex,
+      trackTitle: track.title,
+      defaultBackgroundMusic: track.defaultBackgroundMusic,
+      autoActivateBackgroundMusic,
+      backgroundMusic,
+      isBackgroundMusicPlaying,
+      timestamp: new Date().toISOString()
+    });
+    
     if (track.defaultBackgroundMusic && autoActivateBackgroundMusic) {
       const bgTrack = backgroundMusicTracks.find(bg => bg.id === track.defaultBackgroundMusic);
       if (bgTrack) {
+        console.log('🎵 [AUDIO SYNC] Found background track:', {
+          bgTrackId: bgTrack.id,
+          bgTrackTitle: bgTrack.title,
+          bgTrackUrl: bgTrack.audioUrl,
+          timestamp: new Date().toISOString()
+        });
+        
         // Stop current background music before switching
         const backgroundAudio = backgroundAudioRef.current;
         if (backgroundAudio) {
+          console.log('🎵 [AUDIO SYNC] Stopping current background music:', {
+            currentSrc: backgroundAudio.src,
+            currentTime: backgroundAudio.currentTime,
+            paused: backgroundAudio.paused,
+            timestamp: new Date().toISOString()
+          });
           backgroundAudio.pause();
           backgroundAudio.currentTime = 0;
         }
@@ -626,12 +927,33 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         setIsBackgroundMusicPlaying(true);
         setSelectedBackgroundTrack(bgTrack.id);
         
+        console.log('🎵 [AUDIO SYNC] Background music state updated:', {
+          newBackgroundMusic: bgTrack.audioUrl,
+          isBackgroundMusicPlaying: true,
+          selectedBackgroundTrack: bgTrack.id,
+          timestamp: new Date().toISOString()
+        });
+        
         // Update the background audio element source
         if (backgroundAudio) {
           backgroundAudio.src = bgTrack.audioUrl;
           backgroundAudio.load();
+          
+          console.log('🎵 [AUDIO SYNC] Background audio element updated:', {
+            newSrc: backgroundAudio.src,
+            readyState: backgroundAudio.readyState,
+            timestamp: new Date().toISOString()
+          });
         }
+      } else {
+        console.warn('🎵 [AUDIO SYNC] Background track not found:', track.defaultBackgroundMusic);
       }
+    } else {
+      console.log('🎵 [AUDIO SYNC] Skipping background music activation:', {
+        hasDefaultBackgroundMusic: !!track.defaultBackgroundMusic,
+        autoActivateBackgroundMusic,
+        timestamp: new Date().toISOString()
+      });
     }
   };
 
