@@ -197,7 +197,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       console.log('Audio pause event fired');
       setIsPlaying(false);
     };
-    const handleEnded = () => handleNext();
+    const handleEnded = () => handleNext(true);
     const handleError = (e: Event) => {
       console.error('Audio error:', e);
       console.error('Audio src:', audio.src);
@@ -411,7 +411,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = (autoPlay: boolean = false) => {
     const newTrackIndex = currentTrack === mockTracks.length - 1 ? 0 : currentTrack + 1;
     
     // Stop current audio before switching tracks
@@ -430,8 +430,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       audio.src = mockTracks[newTrackIndex].audioUrl;
       audio.load();
       
-      // Auto-play the new track if it was playing before
-      if (isPlaying) {
+      // Auto-play the new track if it was playing before OR if autoPlay is requested
+      if (isPlaying || autoPlay) {
         setTimeout(() => {
           if (audio) {
             audio.play().catch((error) => {
@@ -793,7 +793,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleNext}
+              onClick={() => handleNext()}
               className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-10 w-10 md:h-12 md:w-12"
             >
               <SkipForward className="h-4 w-4 md:h-5 md:w-5" />

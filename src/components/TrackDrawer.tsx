@@ -149,7 +149,7 @@ export function TrackDrawer({
         {isOpen && (
           <div className="w-80 h-full glass-morphism border-r flex flex-col">
             {/* Header - Fixed */}
-            <div className="flex items-center justify-between p-6 border-b border-white/10 flex-shrink-0">
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10 flex-shrink-0">
               <div className="flex flex-col">
                 <span className="text-sm font-light text-white/80">Awakening with</span>
                 <h2 className="text-xl font-semibold text-white">Andrew Cohen</h2>
@@ -166,10 +166,10 @@ export function TrackDrawer({
 
             {/* Scrollable Content Area */}
             <ScrollArea className="flex-1">
-              <div className="p-6">
+              <div className="p-4 md:p-6">
                 {/* Navigation Links */}
-                <div className="mb-6">
-                  <nav className="space-y-3">
+                <div className="mb-4 md:mb-6">
+                  <nav className="space-y-1 md:space-y-3">
                     {navigationLinks.map((link) => (
                       <button
                         key={link.name}
