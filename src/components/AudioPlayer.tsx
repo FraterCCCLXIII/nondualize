@@ -223,28 +223,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     const audio = audioRef.current;
     if (!audio) return;
 
-    console.log('Setting up audio event listeners for track:', currentTrack);
-
-    const updateTime = () => {
-      console.log('Time update:', audio.currentTime);
-      setCurrentTime(audio.currentTime);
-    };
-    const updateDuration = () => {
-      console.log('Duration update:', audio.duration);
-      setDuration(audio.duration);
-    };
-    const handlePlay = () => {
-      console.log('Audio play event fired - setting isPlaying to true');
-      setIsPlaying(true);
-    };
-    const handlePause = () => {
-      console.log('Audio pause event fired - setting isPlaying to false');
-      setIsPlaying(false);
-    };
-    const handleEnded = () => {
-      console.log('Audio ended - calling handleNext');
-      handleNext(true);
-    };
+    const updateTime = () => setCurrentTime(audio.currentTime);
+    const updateDuration = () => setDuration(audio.duration);
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    const handleEnded = () => handleNext(true);
     const handleError = (e: Event) => {
       console.error('Audio error:', e);
       console.error('Audio src:', audio.src);
@@ -258,10 +241,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
 
-    console.log('Audio event listeners attached');
-
     return () => {
-      console.log('Removing audio event listeners');
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('play', handlePlay);
@@ -543,12 +523,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       // Auto-play the new track if it was playing before OR if autoPlay is requested
       if (isPlaying || autoPlay) {
         const playNextTrack = () => {
-          console.log('Starting next track playback');
-          console.log('Audio ready state:', audio.readyState);
-          console.log('Audio src:', audio.src);
-          
           audio.play().then(() => {
-            console.log('Next track started playing successfully');
             // Note: setIsPlaying(true) is handled by the 'play' event listener
             
             // Handle background music for the new track
