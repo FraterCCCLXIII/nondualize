@@ -223,17 +223,28 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const updateTime = () => setCurrentTime(audio.currentTime);
-    const updateDuration = () => setDuration(audio.duration);
+    console.log('Setting up audio event listeners for track:', currentTrack);
+
+    const updateTime = () => {
+      console.log('Time update:', audio.currentTime);
+      setCurrentTime(audio.currentTime);
+    };
+    const updateDuration = () => {
+      console.log('Duration update:', audio.duration);
+      setDuration(audio.duration);
+    };
     const handlePlay = () => {
-      console.log('Audio play event fired');
+      console.log('Audio play event fired - setting isPlaying to true');
       setIsPlaying(true);
     };
     const handlePause = () => {
-      console.log('Audio pause event fired');
+      console.log('Audio pause event fired - setting isPlaying to false');
       setIsPlaying(false);
     };
-    const handleEnded = () => handleNext(true);
+    const handleEnded = () => {
+      console.log('Audio ended - calling handleNext');
+      handleNext(true);
+    };
     const handleError = (e: Event) => {
       console.error('Audio error:', e);
       console.error('Audio src:', audio.src);
@@ -247,7 +258,10 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
 
+    console.log('Audio event listeners attached');
+
     return () => {
+      console.log('Removing audio event listeners');
       audio.removeEventListener('timeupdate', updateTime);
       audio.removeEventListener('loadedmetadata', updateDuration);
       audio.removeEventListener('play', handlePlay);
@@ -365,19 +379,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     if (audio) {
       audio.pause();
       audio.currentTime = 0;
-      
-      // More aggressive cleanup for mobile browsers
-      const currentSrc = audio.src;
-      audio.removeAttribute('src');
-      audio.load();
-      
-      // Force cleanup with silent audio to ensure complete stop
-      try {
-        audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmHgU7k9n1unEiBC13yO/eizEIHWq+8+OWT';
-        audio.load();
-      } catch (e) {
-        console.log('Audio cleanup completed');
-      }
     }
     
     // Stop background audio
@@ -385,15 +386,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     if (backgroundAudio) {
       backgroundAudio.pause();
       backgroundAudio.currentTime = 0;
-      
-      // Also cleanup background audio source
-      try {
-        const currentBgSrc = backgroundAudio.src;
-        backgroundAudio.removeAttribute('src');
-        backgroundAudio.load();
-      } catch (e) {
-        console.log('Background audio cleanup completed');
-      }
     }
     
     // Update state to reflect stopped audio
@@ -552,6 +544,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       if (isPlaying || autoPlay) {
         const playNextTrack = () => {
           console.log('Starting next track playback');
+          console.log('Audio ready state:', audio.readyState);
+          console.log('Audio src:', audio.src);
           
           audio.play().then(() => {
             console.log('Next track started playing successfully');
