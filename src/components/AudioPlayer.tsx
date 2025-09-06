@@ -381,6 +381,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
   const handlePrevious = (autoPlay: boolean = false) => {
     const newTrackIndex = currentTrack === 0 ? mockTracks.length - 1 : currentTrack - 1;
+    const wasPlaying = isPlaying; // Store the current playing state
     
     // Stop current audio before switching tracks - aggressive cleanup for mobile
     const audio = audioRef.current;
@@ -406,6 +407,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       backgroundAudioRef.current.currentTime = 0;
     }
     
+    // Update playing state immediately when stopping current track
+    setIsPlaying(false);
     setCurrentTrack(newTrackIndex);
     setCurrentTime(0);
     updateTrackUrl(newTrackIndex);
@@ -418,7 +421,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         
         // Auto-play the new track if it was playing before OR if autoPlay is requested
         // When user manually clicks previous, always start playing (autoPlay will be true from button click)
-        if (isPlaying || autoPlay) {
+        if (wasPlaying || autoPlay) {
           const playPrevTrack = () => {
             audio.play().then(() => {
               console.log('Previous track started playing successfully');
@@ -461,6 +464,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
   const handleNext = (autoPlay: boolean = false) => {
     const newTrackIndex = currentTrack === mockTracks.length - 1 ? 0 : currentTrack + 1;
+    const wasPlaying = isPlaying; // Store the current playing state
     
     // Stop current audio before switching tracks - aggressive cleanup for mobile
     const audio = audioRef.current;
@@ -486,6 +490,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       backgroundAudioRef.current.currentTime = 0;
     }
     
+    // Update playing state immediately when stopping current track
+    setIsPlaying(false);
     setCurrentTrack(newTrackIndex);
     setCurrentTime(0);
     updateTrackUrl(newTrackIndex);
@@ -498,7 +504,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         
         // Auto-play the new track if it was playing before OR if autoPlay is requested
         // When user manually clicks next, always start playing (autoPlay will be true from button click)
-        if (isPlaying || autoPlay) {
+        if (wasPlaying || autoPlay) {
           const playNextTrack = () => {
             audio.play().then(() => {
               console.log('Next track started playing successfully');
