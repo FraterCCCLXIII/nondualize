@@ -861,6 +861,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         src={track.audioUrl} 
         preload="metadata"
         playsInline
+        style={{ display: 'none' }}
         onError={(e) => {
           console.error('Audio error:', e);
           console.error('Audio src:', track.audioUrl);
@@ -877,6 +878,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           ref={backgroundAudioRef} 
           src={backgroundMusic} 
           loop 
+          style={{ display: 'none' }}
         />
       )}
 
