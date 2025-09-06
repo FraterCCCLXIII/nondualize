@@ -379,7 +379,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     }
   };
 
-  const handlePrevious = () => {
+  const handlePrevious = (autoPlay: boolean = false) => {
     const newTrackIndex = currentTrack === 0 ? mockTracks.length - 1 : currentTrack - 1;
     
     // Stop current audio before switching tracks - aggressive cleanup for mobile
@@ -416,18 +416,30 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         audio.src = mockTracks[newTrackIndex].audioUrl;
         audio.load();
         
-        // Auto-play the new track if it was playing before
-        if (isPlaying) {
+        // Auto-play the new track if it was playing before OR if autoPlay is requested
+        // When user manually clicks previous, always start playing (autoPlay will be true from button click)
+        if (isPlaying || autoPlay) {
           const playPrevTrack = () => {
             audio.play().then(() => {
               console.log('Previous track started playing successfully');
+              setIsPlaying(true);
               
-              // Activate default background music if background music is currently playing
-              if (isBackgroundMusicPlaying) {
+              // If background music is enabled (has a selected track), start it too
+              if (selectedBackgroundTrack && !isBackgroundMusicPlaying) {
+                const selectedTrack = backgroundMusicTracks.find(track => track.id === selectedBackgroundTrack);
+                if (selectedTrack) {
+                  setBackgroundMusic(selectedTrack.audioUrl);
+                  setIsBackgroundMusicPlaying(true);
+                  // Activate background music for this track
+                  activateDefaultBackgroundMusic(newTrackIndex);
+                }
+              } else if (isBackgroundMusicPlaying) {
+                // Activate default background music if background music is currently playing
                 activateDefaultBackgroundMusic(newTrackIndex);
               }
             }).catch((error) => {
               console.log('Auto-play prevented by browser:', error);
+              setIsPlaying(false);
             });
           };
           
@@ -485,17 +497,29 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         audio.load();
         
         // Auto-play the new track if it was playing before OR if autoPlay is requested
+        // When user manually clicks next, always start playing (autoPlay will be true from button click)
         if (isPlaying || autoPlay) {
           const playNextTrack = () => {
             audio.play().then(() => {
               console.log('Next track started playing successfully');
+              setIsPlaying(true);
               
-              // Activate default background music if background music is currently playing
-              if (isBackgroundMusicPlaying) {
+              // If background music is enabled (has a selected track), start it too
+              if (selectedBackgroundTrack && !isBackgroundMusicPlaying) {
+                const selectedTrack = backgroundMusicTracks.find(track => track.id === selectedBackgroundTrack);
+                if (selectedTrack) {
+                  setBackgroundMusic(selectedTrack.audioUrl);
+                  setIsBackgroundMusicPlaying(true);
+                  // Activate background music for this track
+                  activateDefaultBackgroundMusic(newTrackIndex);
+                }
+              } else if (isBackgroundMusicPlaying) {
+                // Activate default background music if background music is currently playing
                 activateDefaultBackgroundMusic(newTrackIndex);
               }
             }).catch((error) => {
               console.log('Auto-play prevented by browser:', error);
+              setIsPlaying(false);
             });
           };
           
@@ -854,12 +878,12 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+          <div className="flex items-center gap-1 md:gap-2 flex-nowrap overflow-x-auto">
             <Button
               variant="ghost"
               size="icon"
-              onClick={handlePrevious}
-              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-10 w-10 md:h-12 md:w-12"
+              onClick={() => handlePrevious(true)}
+              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-9 w-9 md:h-12 md:w-12 flex-shrink-0"
             >
               <SkipBack className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
@@ -868,7 +892,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
               variant="ghost"
               size="icon"
               onClick={togglePlay}
-              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-10 w-10 md:h-12 md:w-12"
+              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-9 w-9 md:h-12 md:w-12 flex-shrink-0"
             >
               {isPlaying ? (
                 <Pause className="h-5 w-5 md:h-6 md:w-6" />
@@ -880,8 +904,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => handleNext()}
-              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-10 w-10 md:h-12 md:w-12"
+              onClick={() => handleNext(true)}
+              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-9 w-9 md:h-12 md:w-12 flex-shrink-0"
             >
               <SkipForward className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
@@ -892,12 +916,17 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-10 w-10 md:h-12 md:w-12"
+                  className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-9 w-9 md:h-12 md:w-12 flex-shrink-0"
                 >
                   <Volume2 className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-48 p-4 glass-morphism border-white/20 touch-manipulation">
+              <PopoverContent 
+                className="w-48 p-4 glass-morphism border-white/20"
+                side="top"
+                align="center"
+                sideOffset={8}
+              >
                 <div className="space-y-3">
                   <div className="text-sm font-medium text-white">Volume</div>
                   <Slider
@@ -905,7 +934,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                     max={1}
                     step={0.01}
                     onValueChange={handleVolumeChange}
-                    className="w-full slider-thumb"
+                    className="w-full slider-thumb touch-manipulation"
+                    style={{ touchAction: 'none' }}
                   />
                   <div className="text-xs text-white/60 text-center">
                     {Math.round(volume * 100)}%
@@ -920,7 +950,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-10 w-10 md:h-12 md:w-12 ${
+                  className={`text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-9 w-9 md:h-12 md:w-12 flex-shrink-0 ${
                     isBackgroundMusicPlaying ? 'text-[hsl(var(--accent))]' : ''
                   }`}
                 >
@@ -934,7 +964,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                 variant="ghost"
                 size="icon"
                 onClick={toggleCaptions}
-                className={`text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-10 w-10 md:h-12 md:w-12 ${
+                className={`text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-9 w-9 md:h-12 md:w-12 flex-shrink-0 ${
                   isCaptionsActive ? 'text-[hsl(var(--accent))]' : ''
                 }`}
               >
@@ -947,11 +977,16 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
               variant="ghost"
               size="icon"
               onClick={() => setIsShareModalOpen(true)}
-              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-10 w-10 md:h-12 md:w-12"
+              className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-9 w-9 md:h-12 md:w-12 flex-shrink-0"
             >
               <Share2 className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
-              <PopoverContent className="w-64 p-4 glass-morphism border-white/20 touch-manipulation">
+              <PopoverContent 
+                className="w-64 p-4 glass-morphism border-white/20"
+                side="top"
+                align="center"
+                sideOffset={8}
+              >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-medium text-white">Background Music</div>
@@ -1027,7 +1062,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                           max={1}
                           step={0.01}
                           onValueChange={handleBackgroundMusicVolumeChange}
-                          className={`w-full slider-thumb ${!selectedBackgroundTrack ? 'opacity-50' : ''}`}
+                          className={`w-full slider-thumb touch-manipulation ${!selectedBackgroundTrack ? 'opacity-50' : ''}`}
+                          style={{ touchAction: 'none' }}
                           disabled={!selectedBackgroundTrack}
                         />
                       </div>
