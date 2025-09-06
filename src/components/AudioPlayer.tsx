@@ -196,10 +196,15 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       const audio = audioRef.current;
       const backgroundAudio = backgroundAudioRef.current;
       
-      if (audio && !hasUserInteracted) {
+      if (audio) {
         // Prepare audio for mobile playback
         audio.muted = false;
         audio.volume = volume;
+        
+        // Ensure mobile-specific attributes are set
+        audio.setAttribute('playsinline', 'true');
+        audio.setAttribute('webkit-playsinline', 'true');
+        audio.setAttribute('controls', 'false');
         
         // Try to create audio context for mobile browsers
         try {
@@ -213,10 +218,19 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           console.log('Audio context not available:', e);
         }
       }
+      
+      if (backgroundAudio) {
+        // Prepare background audio for mobile playback
+        backgroundAudio.muted = false;
+        backgroundAudio.volume = backgroundMusicVolume;
+        backgroundAudio.setAttribute('playsinline', 'true');
+        backgroundAudio.setAttribute('webkit-playsinline', 'true');
+        backgroundAudio.setAttribute('controls', 'false');
+      }
     };
 
     initMobileAudio();
-  }, [hasUserInteracted, volume]);
+  }, [hasUserInteracted, volume, backgroundMusicVolume]);
 
   // Consolidated audio event handling
   useEffect(() => {
@@ -380,6 +394,21 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     // Mark that user has interacted with audio
     setHasUserInteracted(true);
 
+    // Resume audio context if suspended (important for mobile/production)
+    const resumeAudioContext = async () => {
+      try {
+        if (typeof window !== 'undefined' && 'AudioContext' in window) {
+          const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+          if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+            console.log('Audio context resumed');
+          }
+        }
+      } catch (e) {
+        console.log('Audio context resume failed:', e);
+      }
+    };
+
     if (isPlaying) {
       // Pause current audio and background music
       console.log('Pausing audio playback');
@@ -391,6 +420,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         backgroundAudioRef.current.pause();
       }
     } else {
+      // Resume audio context first
+      resumeAudioContext();
+      
       // Ensure audio has the correct source and is loaded
       if (audio.src !== track.audioUrl) {
         audio.src = track.audioUrl;
@@ -467,8 +499,21 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       
       // Auto-play the new track if it was playing before OR if autoPlay is requested
       if (isPlaying || autoPlay) {
-        const playPrevTrack = () => {
+        const playPrevTrack = async () => {
           console.log('Playing previous track:', mockTracks[newTrackIndex].title);
+          
+          // Resume audio context if suspended (important for mobile/production)
+          try {
+            if (typeof window !== 'undefined' && 'AudioContext' in window) {
+              const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+              if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+                console.log('Audio context resumed for previous track');
+              }
+            }
+          } catch (e) {
+            console.log('Audio context resume failed for previous track:', e);
+          }
           
           audio.play().then(() => {
             console.log('Previous track started playing successfully');
@@ -522,8 +567,22 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       
       // Auto-play the new track if it was playing before OR if autoPlay is requested
       if (isPlaying || autoPlay) {
-        const playNextTrack = () => {
+        const playNextTrack = async () => {
           console.log('Playing next track:', mockTracks[newTrackIndex].title);
+          
+          // Resume audio context if suspended (important for mobile/production)
+          try {
+            if (typeof window !== 'undefined' && 'AudioContext' in window) {
+              const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+              if (audioContext.state === 'suspended') {
+                await audioContext.resume();
+                console.log('Audio context resumed for next track');
+              }
+            }
+          } catch (e) {
+            console.log('Audio context resume failed for next track:', e);
+          }
+          
           audio.play().then(() => {
             console.log('Next track started playing successfully');
             // Note: setIsPlaying(true) is handled by the 'play' event listener
@@ -617,8 +676,21 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       setHasUserInteracted(true);
       
       // Try to play the track when selected (user explicitly selected it)
-      const playNewTrack = () => {
+      const playNewTrack = async () => {
         console.log('Starting selected track playback');
+        
+        // Resume audio context if suspended (important for mobile/production)
+        try {
+          if (typeof window !== 'undefined' && 'AudioContext' in window) {
+            const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+            if (audioContext.state === 'suspended') {
+              await audioContext.resume();
+              console.log('Audio context resumed for selected track');
+            }
+          }
+        } catch (e) {
+          console.log('Audio context resume failed for selected track:', e);
+        }
         
         audio.play().then(() => {
           console.log('Selected track started playing successfully');
