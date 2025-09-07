@@ -423,6 +423,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         currentTime: backgroundAudio.currentTime,
         paused: backgroundAudio.paused,
         mainAudioPlaying: isPlaying,
+        isBackgroundMusicPlaying,
+        backgroundMusic,
         timestamp: new Date().toISOString()
       });
       
@@ -451,6 +453,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         src: backgroundAudio.src,
         currentTime: backgroundAudio.currentTime,
         mainAudioPlaying: isPlaying,
+        isBackgroundMusicPlaying,
+        backgroundMusic,
         timestamp: new Date().toISOString()
       });
       backgroundAudio.pause();
@@ -673,10 +677,14 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             timestamp: new Date().toISOString()
           });
           
-          // If background music is enabled and should be active, activate the default background music
-          if (isBackgroundMusicPlaying && autoActivateBackgroundMusic && !backgroundMusic) {
-            console.log('🎵 [AUDIO SYNC] Activating default background music in togglePlay');
-            activateDefaultBackgroundMusic(currentTrack);
+          // CRITICAL FIX: Always ensure background music is activated when user presses play
+          if (isBackgroundMusicPlaying && autoActivateBackgroundMusic) {
+            if (!backgroundMusic) {
+              console.log('🎵 [AUDIO SYNC] Activating default background music in togglePlay (first time)');
+              activateDefaultBackgroundMusic(currentTrack);
+            } else {
+              console.log('🎵 [AUDIO SYNC] Background music already activated, will sync via useEffect');
+            }
           }
           
           // Background music will automatically start due to the useEffect that watches isPlaying
