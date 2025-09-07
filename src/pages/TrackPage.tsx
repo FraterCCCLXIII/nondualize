@@ -22,8 +22,13 @@ export function TrackPage() {
 
   const trackIndex = getTrackIndexFromSlug(trackSlug || "");
 
-  // Debug logging for routing issues
-  console.log('TrackPage - trackSlug:', trackSlug, 'trackIndex:', trackIndex);
+  // Enhanced debug logging for routing issues
+  console.log('🔍 [ROUTING DEBUG] TrackPage loaded:', {
+    trackSlug,
+    trackIndex,
+    isValidSlug: trackSlug && trackIndex !== undefined,
+    timestamp: new Date().toISOString()
+  });
 
   // If invalid slug, redirect to home
   if (!trackSlug || trackIndex === undefined) {
