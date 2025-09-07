@@ -188,8 +188,55 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const backgroundAudioRef = useRef<HTMLAudioElement>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
+  const backgroundGainNodeRef = useRef<GainNode | null>(null);
+  const audioSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const backgroundAudioSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
 
   const track = mockTracks[currentTrack];
+
+  // Setup Web Audio API for mobile volume control
+  const setupWebAudioVolume = useCallback(() => {
+    const audio = audioRef.current;
+    const backgroundAudio = backgroundAudioRef.current;
+    
+    try {
+      const audioContext = getAudioContext();
+      if (!audioContext) return;
+
+      // Setup main audio gain node
+      if (audio && !audioSourceRef.current) {
+        const source = audioContext.createMediaElementSource(audio);
+        const gainNode = audioContext.createGain();
+        
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        audioSourceRef.current = source;
+        gainNodeRef.current = gainNode;
+        gainNode.gain.value = volume;
+        
+        console.log('🎵 [VOLUME] Main audio Web Audio API setup complete');
+      }
+
+      // Setup background audio gain node
+      if (backgroundAudio && !backgroundAudioSourceRef.current) {
+        const bgSource = audioContext.createMediaElementSource(backgroundAudio);
+        const bgGainNode = audioContext.createGain();
+        
+        bgSource.connect(bgGainNode);
+        bgGainNode.connect(audioContext.destination);
+        
+        backgroundAudioSourceRef.current = bgSource;
+        backgroundGainNodeRef.current = bgGainNode;
+        bgGainNode.gain.value = backgroundMusicVolume * volume;
+        
+        console.log('🎵 [VOLUME] Background audio Web Audio API setup complete');
+      }
+    } catch (error) {
+      console.warn('🎵 [VOLUME] Web Audio API setup failed:', error);
+    }
+  }, [volume, backgroundMusicVolume]);
 
   // Debug: Track isPlaying state changes
   useEffect(() => {
@@ -280,7 +327,12 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     };
 
     initMobileAudio();
-  }, [hasUserInteracted, volume, backgroundMusicVolume]);
+    
+    // Setup Web Audio API for volume control after user interaction
+    if (hasUserInteracted) {
+      setupWebAudioVolume();
+    }
+  }, [hasUserInteracted, volume, backgroundMusicVolume, setupWebAudioVolume]);
 
   // Consolidated audio event handling
   useEffect(() => {
@@ -465,16 +517,74 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   useEffect(() => {
     const audio = audioRef.current;
     const backgroundAudio = backgroundAudioRef.current;
-    
-    if (audio) {
-      audio.volume = volume;
+
+    // Update main audio volume
+    if (gainNodeRef.current) {
+      try {
+        gainNodeRef.current.gain.setValueAtTime(volume, getAudioContext()?.currentTime || 0);
+        console.log('🎵 [VOLUME] Main volume updated via Web Audio API:', volume);
+      } catch (error) {
+        console.warn('🎵 [VOLUME] Web Audio API volume update failed:', error);
+      }
     }
-    
+
+    if (audio) {
+      try {
+        audio.volume = volume;
+        console.log('🎵 [VOLUME] Main volume updated via HTML5 audio:', volume);
+      } catch (error) {
+        console.warn('🎵 [VOLUME] HTML5 volume update failed:', error);
+      }
+    }
+
+    // Update background music volume
     if (backgroundAudio && backgroundMusic) {
       const bgVolume = volume * backgroundMusicVolume;
-      backgroundAudio.volume = bgVolume;
+      
+      if (backgroundGainNodeRef.current) {
+        try {
+          backgroundGainNodeRef.current.gain.setValueAtTime(bgVolume, getAudioContext()?.currentTime || 0);
+          console.log('🎵 [VOLUME] Background volume updated via Web Audio API:', bgVolume);
+        } catch (error) {
+          console.warn('🎵 [VOLUME] Background Web Audio API volume update failed:', error);
+        }
+      }
+
+      try {
+        backgroundAudio.volume = bgVolume;
+        console.log('🎵 [VOLUME] Background volume updated via HTML5 audio:', bgVolume);
+      } catch (error) {
+        console.warn('🎵 [VOLUME] Background HTML5 volume update failed:', error);
+      }
     }
   }, [volume, backgroundMusicVolume, backgroundMusic]);
+
+  // Cleanup Web Audio nodes on unmount
+  useEffect(() => {
+    return () => {
+      try {
+        if (audioSourceRef.current) {
+          audioSourceRef.current.disconnect();
+          audioSourceRef.current = null;
+        }
+        if (gainNodeRef.current) {
+          gainNodeRef.current.disconnect();
+          gainNodeRef.current = null;
+        }
+        if (backgroundAudioSourceRef.current) {
+          backgroundAudioSourceRef.current.disconnect();
+          backgroundAudioSourceRef.current = null;
+        }
+        if (backgroundGainNodeRef.current) {
+          backgroundGainNodeRef.current.disconnect();
+          backgroundGainNodeRef.current = null;
+        }
+        console.log('🎵 [VOLUME] Web Audio nodes cleaned up');
+      } catch (error) {
+        console.warn('🎵 [VOLUME] Error cleaning up Web Audio nodes:', error);
+      }
+    };
+  }, []);
 
   // Auto-activate default background music for the first track on mount
   // BUT ONLY if the user has started playing audio (hasUserInteracted)
@@ -1049,43 +1159,54 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   };
 
   const handleVolumeChange = (value: number[]) => {
-    
     const newVolume = value[0];
-    
     setVolume(newVolume);
-    
-    // Check if browser supports volume control (some mobile browsers don't)
+
+    console.log('🎵 [VOLUME] Volume change requested:', newVolume);
+
+    // Try Web Audio API first (works on mobile)
+    if (gainNodeRef.current) {
+      try {
+        gainNodeRef.current.gain.setValueAtTime(newVolume, getAudioContext()?.currentTime || 0);
+        console.log('🎵 [VOLUME] Main volume set via Web Audio API:', newVolume);
+      } catch (error) {
+        console.warn('🎵 [VOLUME] Web Audio API volume control failed:', error);
+      }
+    }
+
+    // Fallback to direct volume control (desktop browsers)
     const audio = audioRef.current;
     if (audio) {
       try {
-        // Test if volume can be set (some mobile browsers ignore this)
-        const originalVolume = audio.volume;
         audio.volume = newVolume;
-        
-        // Verify the volume was actually set
-        if (Math.abs(audio.volume - newVolume) > 0.01) {
-          console.warn('Browser does not support volume control');
-        } else {
-          // Main audio element not found
-        }
+        console.log('🎵 [VOLUME] Main volume set via HTML5 audio:', newVolume);
       } catch (error) {
-        console.warn('Volume control not supported:', error);
+        console.warn('🎵 [VOLUME] HTML5 volume control failed:', error);
       }
-    } else {
-      // Background audio element not found
     }
+
+    // Update background music volume
+    const bgVolume = newVolume * backgroundMusicVolume;
     
-    // Update background music volume to 75% of main volume
+    // Try Web Audio API for background music
+    if (backgroundGainNodeRef.current) {
+      try {
+        backgroundGainNodeRef.current.gain.setValueAtTime(bgVolume, getAudioContext()?.currentTime || 0);
+        console.log('🎵 [VOLUME] Background volume set via Web Audio API:', bgVolume);
+      } catch (error) {
+        console.warn('🎵 [VOLUME] Background Web Audio API volume control failed:', error);
+      }
+    }
+
+    // Fallback for background music
     const backgroundAudio = backgroundAudioRef.current;
     if (backgroundAudio) {
       try {
-        const bgVolume = newVolume * 0.75;
         backgroundAudio.volume = bgVolume;
+        console.log('🎵 [VOLUME] Background volume set via HTML5 audio:', bgVolume);
       } catch (error) {
-        console.warn('Background volume control not supported:', error);
+        console.warn('🎵 [VOLUME] Background HTML5 volume control failed:', error);
       }
-    } else {
-      // Background audio element not found
     }
   };
 
@@ -1137,16 +1258,31 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   };
 
   const handleBackgroundMusicVolumeChange = (value: number[]) => {
-    
     const newVolume = value[0];
-    
     setBackgroundMusicVolume(newVolume);
-    
+
+    console.log('🎵 [VOLUME] Background music volume change requested:', newVolume);
+
+    const finalVolume = newVolume * volume;
+
+    // Try Web Audio API first (works on mobile)
+    if (backgroundGainNodeRef.current) {
+      try {
+        backgroundGainNodeRef.current.gain.setValueAtTime(finalVolume, getAudioContext()?.currentTime || 0);
+        console.log('🎵 [VOLUME] Background music volume set via Web Audio API:', finalVolume);
+      } catch (error) {
+        console.warn('🎵 [VOLUME] Background Web Audio API volume control failed:', error);
+      }
+    }
+
+    // Fallback to direct volume control (desktop browsers)
     if (backgroundAudioRef.current) {
-      const finalVolume = newVolume * volume;
-      backgroundAudioRef.current.volume = finalVolume;
-    } else {
-      // Background audio element not found
+      try {
+        backgroundAudioRef.current.volume = finalVolume;
+        console.log('🎵 [VOLUME] Background music volume set via HTML5 audio:', finalVolume);
+      } catch (error) {
+        console.warn('🎵 [VOLUME] Background HTML5 volume control failed:', error);
+      }
     }
   };
 
@@ -1335,7 +1471,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                     max={1}
                     step={0.01}
                     onValueChange={handleVolumeChange}
-                    className="w-full slider-thumb"
+                    className="w-full slider-thumb touch-manipulation"
+                    style={{ touchAction: 'none' }}
                   />
                   <div className="text-xs text-white/60 text-center">
                     {Math.round(volume * 100)}%
