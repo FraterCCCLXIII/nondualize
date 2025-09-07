@@ -15,7 +15,7 @@
   
   /* For elements that need to be above Safari's bottom bar */
   .pb-safari-bottom-bar {
-    padding-bottom: max(6rem, env(safe-area-inset-bottom) + 5rem);
+    padding-bottom: max(3rem, env(safe-area-inset-bottom) + 2rem);
   }
 }
 
@@ -29,7 +29,7 @@
 }
 
 .pb-safari-bottom-bar {
-  padding-bottom: 6rem;
+  padding-bottom: 3rem;
 }
 
 /* Mobile touch improvements */
