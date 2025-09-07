@@ -110,21 +110,6 @@ export function TrackDrawer({
     setModalOpen(true);
   };
 
-  // Listen for custom events to open modals from URL navigation
-  useEffect(() => {
-    const handleOpenModal = (event: CustomEvent) => {
-      const { pageSlug } = event.detail;
-      setCurrentPageSlug(pageSlug);
-      setModalOpen(true);
-    };
-
-    window.addEventListener('openNavigationModal', handleOpenModal as EventListener);
-    
-    return () => {
-      window.removeEventListener('openNavigationModal', handleOpenModal as EventListener);
-    };
-  }, []);
-
   return (
     <>
       {/* Backdrop - Fade in/out */}

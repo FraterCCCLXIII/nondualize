@@ -20,12 +20,6 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/track/:trackSlug" element={<TrackPage />} />
-          {/* Modal page routes */}
-          <Route path="/life" element={<Index />} />
-          <Route path="/teachings" element={<Index />} />
-          <Route path="/books" element={<Index />} />
-          <Route path="/archive" element={<Index />} />
-          <Route path="/engage" element={<Index />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
