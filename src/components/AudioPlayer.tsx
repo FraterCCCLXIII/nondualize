@@ -629,11 +629,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       audio.pause();
       setIsPlaying(false);
       
-      // Pause background music if it's active
-      if (backgroundAudioRef.current && isBackgroundMusicPlaying) {
-        console.log('🎵 [AUDIO SYNC] Pausing background music');
-        backgroundAudioRef.current.pause();
-      }
+      // Background music will automatically pause due to the useEffect that watches isPlaying
+      // The useEffect will handle pausing background music when isPlaying becomes false
+      console.log('🎵 [AUDIO SYNC] Background music will sync with main audio pause via useEffect');
     } else {
       console.log('🎵 [AUDIO SYNC] Starting audio playback');
       // Resume audio context first
@@ -682,7 +680,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           }
           
           // Background music will automatically start due to the useEffect that watches isPlaying
-          // No need to manually start it here since the effect will handle it
+          // The useEffect will handle starting background music when isPlaying becomes true
+          console.log('🎵 [AUDIO SYNC] Background music will sync with main audio via useEffect');
         }).catch((error) => {
           console.error('🎵 [AUDIO SYNC] Audio play failed in togglePlay:', error);
           setIsPlaying(false);
@@ -987,6 +986,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   };
 
   const handleTrackSelect = (trackIndex: number) => {
+    console.log('🎵 [AUDIO SYNC] Track selected from navigation:', {
+      trackIndex,
+      trackTitle: mockTracks[trackIndex]?.title,
+      timestamp: new Date().toISOString()
+    });
     
     // Stop all audio immediately using centralized function
     stopAllAudio();
@@ -996,7 +1000,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     setIsDrawerOpen(false); // Ensure drawer closes on mobile
     updateTrackUrl(trackIndex);
     
-    // Load and play the new track
+    // Load the new track but don't auto-play
     const audio = audioRef.current;
     if (audio) {
       const newAudioUrl = mockTracks[trackIndex].audioUrl;
@@ -1008,50 +1012,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       // Mark that user has interacted (since they selected a track)
       setHasUserInteracted(true);
       
-      // Try to play the track when selected (user explicitly selected it)
-      const playNewTrack = async () => {
-        
-        // Resume audio context if suspended (important for mobile/production)
-        try {
-          const audioContext = getAudioContext();
-          if (audioContext && audioContext.state === 'suspended') {
-            await audioContext.resume();
-          }
-        } catch (e) {
-          console.warn('Audio context resume failed for selected track:', e);
-        }
-        
-        audio.play().then(() => {
-          console.log('🎵 [AUDIO SYNC] Selected track play() promise resolved successfully:', {
-            audioCurrentTime: audio.currentTime,
-            audioPaused: audio.paused,
-            audioDuration: audio.duration,
-            timestamp: new Date().toISOString()
-          });
-          
-          // CRITICAL FIX: Explicitly set isPlaying state since play event listener might not fire immediately
-          setIsPlaying(true);
-          console.log('🎵 [AUDIO SYNC] Explicitly set isPlaying to true after successful track selection play');
-          
-          // Activate default background music if background music is currently playing
-          if (isBackgroundMusicPlaying) {
-            activateDefaultBackgroundMusic(trackIndex);
-          }
-        }).catch((error) => {
-          console.error('Selected track play failed:', error);
-          setIsPlaying(false);
-        });
-      };
+      console.log('🎵 [AUDIO SYNC] Track loaded but not auto-playing - user must press play button');
       
-      // Check if audio is ready to play, or wait for it
-      if (audio.readyState >= 2) {
-        playNewTrack();
-      } else {
-        const handleCanPlay = () => {
-          audio.removeEventListener('canplay', handleCanPlay);
-          playNewTrack();
-        };
-        audio.addEventListener('canplay', handleCanPlay);
+      // Activate default background music for the new track (but don't play it yet)
+      if (isBackgroundMusicPlaying) {
+        activateDefaultBackgroundMusic(trackIndex);
       }
     }
   };
@@ -1286,7 +1251,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
               size="icon"
               onClick={() => {
                 console.log('🎵 [AUDIO SYNC] Previous button clicked!');
-                handlePrevious(true);
+                handlePrevious(false); // Changed from true to false - no auto-play
               }}
               className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-9 w-9 md:h-12 md:w-12 flex-shrink-0"
             >
@@ -1318,7 +1283,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
               size="icon"
               onClick={() => {
                 console.log('🎵 [AUDIO SYNC] Next button clicked!');
-                handleNext(true);
+                handleNext(false); // Changed from true to false - no auto-play
               }}
               className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-9 w-9 md:h-12 md:w-12 flex-shrink-0"
             >
