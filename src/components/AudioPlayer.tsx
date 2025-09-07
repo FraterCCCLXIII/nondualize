@@ -658,6 +658,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           audioReadyState: audio.readyState,
           audioSrc: audio.src,
           audioCurrentTime: audio.currentTime,
+          currentTimeState: currentTime,
           timestamp: new Date().toISOString()
         });
         
@@ -665,6 +666,22 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         if (audio.readyState < 2) {
           console.log('🎵 [AUDIO SYNC] Audio not ready, forcing load');
           audio.load();
+        }
+        
+        // CRITICAL FIX: Preserve user's selected position when starting playback
+        // Only set audio.currentTime if it's different from the user's selected position
+        if (audio.currentTime !== currentTime) {
+          console.log('🎵 [AUDIO SYNC] Setting audio position to user-selected time:', {
+            audioCurrentTime: audio.currentTime,
+            userSelectedTime: currentTime,
+            timestamp: new Date().toISOString()
+          });
+          audio.currentTime = currentTime;
+        } else {
+          console.log('🎵 [AUDIO SYNC] Audio position already matches user selection:', {
+            currentTime: currentTime,
+            timestamp: new Date().toISOString()
+          });
         }
         
         setIsPlaying(true);
