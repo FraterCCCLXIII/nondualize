@@ -197,7 +197,7 @@ export function TrackDrawer({
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-medium text-white mb-1 line-clamp-1">
+                          <h3 className="text-sm font-medium text-white mb-1">
                             {track.title}
                           </h3>
                           <p className="text-xs text-white/60 mb-2 line-clamp-2">
