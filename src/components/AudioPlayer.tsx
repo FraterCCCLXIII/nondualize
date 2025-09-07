@@ -392,6 +392,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       hasBackgroundAudio: !!backgroundAudio,
       isBackgroundMusicPlaying,
       backgroundMusic,
+      isPlaying, // CRITICAL: Check if main audio is playing
       backgroundAudioSrc: backgroundAudio?.src,
       backgroundAudioPaused: backgroundAudio?.paused,
       backgroundAudioCurrentTime: backgroundAudio?.currentTime,
@@ -404,12 +405,14 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       return;
     }
 
-    if (isBackgroundMusicPlaying && backgroundMusic) {
-      console.log('🎵 [AUDIO SYNC] Attempting to play background music:', {
+    // CRITICAL FIX: Background music should only play when main audio is playing
+    if (isBackgroundMusicPlaying && backgroundMusic && isPlaying) {
+      console.log('🎵 [AUDIO SYNC] Attempting to play background music (main audio is playing):', {
         src: backgroundAudio.src,
         readyState: backgroundAudio.readyState,
         currentTime: backgroundAudio.currentTime,
         paused: backgroundAudio.paused,
+        mainAudioPlaying: isPlaying,
         timestamp: new Date().toISOString()
       });
       
@@ -432,14 +435,17 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       });
     } else {
       console.log('🎵 [AUDIO SYNC] Pausing background music:', {
-        reason: !isBackgroundMusicPlaying ? 'isBackgroundMusicPlaying is false' : 'no backgroundMusic',
+        reason: !isBackgroundMusicPlaying ? 'isBackgroundMusicPlaying is false' : 
+                !backgroundMusic ? 'no backgroundMusic' : 
+                !isPlaying ? 'main audio is not playing' : 'unknown',
         src: backgroundAudio.src,
         currentTime: backgroundAudio.currentTime,
+        mainAudioPlaying: isPlaying,
         timestamp: new Date().toISOString()
       });
       backgroundAudio.pause();
     }
-  }, [backgroundMusic, isBackgroundMusicPlaying]); // Keep backgroundMusic dependency for playback
+  }, [backgroundMusic, isBackgroundMusicPlaying, isPlaying]); // Added isPlaying dependency
 
   // Ensure volume is properly applied to audio elements
   useEffect(() => {
@@ -457,11 +463,15 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   }, [volume, backgroundMusicVolume, backgroundMusic]);
 
   // Auto-activate default background music for the first track on mount
+  // BUT ONLY if the user has started playing audio (hasUserInteracted)
   useEffect(() => {
-    if (isBackgroundMusicPlaying && !backgroundMusic) {
+    if (isBackgroundMusicPlaying && !backgroundMusic && hasUserInteracted) {
+      console.log('🎵 [AUDIO SYNC] Auto-activating background music after user interaction');
       activateDefaultBackgroundMusic(0);
+    } else if (!hasUserInteracted) {
+      console.log('🎵 [AUDIO SYNC] Skipping auto-activation of background music - no user interaction yet');
     }
-  }, []); // Empty dependency array means this runs once on mount
+  }, [hasUserInteracted]); // Changed dependency to include hasUserInteracted
 
   // Load captions for the current track
   useEffect(() => {
@@ -661,15 +671,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             activateDefaultBackgroundMusic(currentTrack);
           }
           
-          // If background music is set but not playing, try to start it now (user interaction allows it)
-          if (backgroundMusic && isBackgroundMusicPlaying && backgroundAudioRef.current) {
-            console.log('🎵 [AUDIO SYNC] Starting existing background music in togglePlay');
-            backgroundAudioRef.current.play().then(() => {
-              console.log('🎵 [AUDIO SYNC] Background music started successfully in togglePlay');
-            }).catch((error) => {
-              console.error('🎵 [AUDIO SYNC] Background music start failed in togglePlay:', error);
-            });
-          }
+          // Background music will automatically start due to the useEffect that watches isPlaying
+          // No need to manually start it here since the effect will handle it
         }).catch((error) => {
           console.error('🎵 [AUDIO SYNC] Audio play failed in togglePlay:', error);
           setIsPlaying(false);
@@ -852,6 +855,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             // CRITICAL FIX: Explicitly set isPlaying state since play event listener might not fire immediately
             setIsPlaying(true);
             console.log('🎵 [AUDIO SYNC] Explicitly set isPlaying to true after successful play');
+            
+            // Force a small delay to ensure state update is processed
+            setTimeout(() => {
+              console.log('🎵 [AUDIO SYNC] State update verification - isPlaying should be true now');
+            }, 100);
             
             // Handle background music for the new track
             if (isBackgroundMusicPlaying) {
@@ -1278,7 +1286,10 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={togglePlay}
+              onClick={() => {
+                console.log('🎵 [AUDIO SYNC] Play/Pause button clicked - current isPlaying state:', isPlaying);
+                togglePlay();
+              }}
               className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-9 w-9 md:h-12 md:w-12 flex-shrink-0"
             >
               {isPlaying ? (
