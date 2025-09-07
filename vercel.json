@@ -5,11 +5,7 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/track/(.*)",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/((?!api|assets|audio|background-music|transcripts|robots.txt|placeholder.svg|_next|favicon.ico).*)",
+      "source": "/((?!api|assets|audio|background-music|transcripts|robots.txt|placeholder.svg|favicon.ico|.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)).*)",
       "destination": "/index.html"
     }
   ],
