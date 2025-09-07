@@ -680,7 +680,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       
       // Add minimal base padding only if we detected browser UI
       if (safePadding > 0) {
-        safePadding += 10; // Just 10px extra for safety
+        safePadding += 26; // 10px + 16px (1rem) extra for safety
       }
       
       console.log('📱 [MOBILE SAFARI] Conservative bottom bar detection:', {

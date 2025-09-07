@@ -5,7 +5,7 @@
 /* Mobile safe area utilities - Enhanced for Safari */
 @supports (padding: max(0px)) {
   .pb-safe-mobile {
-    padding-bottom: max(4rem, env(safe-area-inset-bottom) + 3rem);
+    padding-bottom: max(5rem, env(safe-area-inset-bottom) + 4rem);
   }
   
   /* Enhanced safe area for bottom-fixed elements */
@@ -21,7 +21,7 @@
 
 /* Fallback for browsers without env() support */
 .pb-safe-mobile {
-  padding-bottom: 4rem;
+  padding-bottom: 5rem;
 }
 
 .pb-safe-mobile-enhanced {
