@@ -1266,7 +1266,10 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => handlePrevious(true)}
+              onClick={() => {
+                console.log('🎵 [AUDIO SYNC] Previous button clicked!');
+                handlePrevious(true);
+              }}
               className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-9 w-9 md:h-12 md:w-12 flex-shrink-0"
             >
               <SkipBack className="h-4 w-4 md:h-5 md:w-5" />
@@ -1288,7 +1291,10 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => handleNext(true)}
+              onClick={() => {
+                console.log('🎵 [AUDIO SYNC] Next button clicked!');
+                handleNext(true);
+              }}
               className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-9 w-9 md:h-12 md:w-12 flex-shrink-0"
             >
               <SkipForward className="h-4 w-4 md:h-5 md:w-5" />
