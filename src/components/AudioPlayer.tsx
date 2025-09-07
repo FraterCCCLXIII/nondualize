@@ -191,6 +191,16 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
   const track = mockTracks[currentTrack];
 
+  // Debug: Track isPlaying state changes
+  useEffect(() => {
+    console.log('🎵 [AUDIO SYNC] isPlaying state changed to:', isPlaying, 'at', new Date().toISOString());
+  }, [isPlaying]);
+
+  // Debug: Track currentTrack changes
+  useEffect(() => {
+    console.log('🎵 [AUDIO SYNC] currentTrack changed to:', currentTrack, 'track:', track.title, 'at', new Date().toISOString());
+  }, [currentTrack, track.title]);
+
   // Initialize audio element with initial track
   useEffect(() => {
     const audio = audioRef.current;
@@ -1288,15 +1298,19 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
               size="icon"
               onClick={() => {
                 console.log('🎵 [AUDIO SYNC] Play/Pause button clicked - current isPlaying state:', isPlaying);
+                console.log('🎵 [AUDIO SYNC] Button should show:', isPlaying ? 'PAUSE icon' : 'PLAY icon');
                 togglePlay();
               }}
               className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-9 w-9 md:h-12 md:w-12 flex-shrink-0"
             >
-              {isPlaying ? (
-                <Pause className="h-5 w-5 md:h-6 md:w-6" />
-              ) : (
-                <Play className="h-5 w-5 md:h-6 md:w-6 ml-0.5" />
-              )}
+              {(() => {
+                console.log('🎵 [AUDIO SYNC] Button render - isPlaying:', isPlaying, 'showing:', isPlaying ? 'PAUSE' : 'PLAY');
+                return isPlaying ? (
+                  <Pause className="h-5 w-5 md:h-6 md:w-6" />
+                ) : (
+                  <Play className="h-5 w-5 md:h-6 md:w-6 ml-0.5" />
+                );
+              })()}
             </Button>
 
             <Button
