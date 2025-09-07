@@ -730,7 +730,16 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           }
           
           audio.play().then(() => {
-            // Note: setIsPlaying(true) is handled by the 'play' event listener
+            console.log('🎵 [AUDIO SYNC] Previous track play() promise resolved successfully:', {
+              audioCurrentTime: audio.currentTime,
+              audioPaused: audio.paused,
+              audioDuration: audio.duration,
+              timestamp: new Date().toISOString()
+            });
+            
+            // CRITICAL FIX: Explicitly set isPlaying state since play event listener might not fire immediately
+            setIsPlaying(true);
+            console.log('🎵 [AUDIO SYNC] Explicitly set isPlaying to true after successful previous track play');
             
             // Handle background music for the new track
             if (isBackgroundMusicPlaying) {
@@ -840,7 +849,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
               timestamp: new Date().toISOString()
             });
             
-            // Note: setIsPlaying(true) is handled by the 'play' event listener
+            // CRITICAL FIX: Explicitly set isPlaying state since play event listener might not fire immediately
+            setIsPlaying(true);
+            console.log('🎵 [AUDIO SYNC] Explicitly set isPlaying to true after successful play');
             
             // Handle background music for the new track
             if (isBackgroundMusicPlaying) {
@@ -993,7 +1004,16 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         }
         
         audio.play().then(() => {
-          // Note: setIsPlaying(true) is handled by the 'play' event listener
+          console.log('🎵 [AUDIO SYNC] Selected track play() promise resolved successfully:', {
+            audioCurrentTime: audio.currentTime,
+            audioPaused: audio.paused,
+            audioDuration: audio.duration,
+            timestamp: new Date().toISOString()
+          });
+          
+          // CRITICAL FIX: Explicitly set isPlaying state since play event listener might not fire immediately
+          setIsPlaying(true);
+          console.log('🎵 [AUDIO SYNC] Explicitly set isPlaying to true after successful track selection play');
           
           // Activate default background music if background music is currently playing
           if (isBackgroundMusicPlaying) {
