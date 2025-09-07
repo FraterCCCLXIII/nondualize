@@ -677,17 +677,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             timestamp: new Date().toISOString()
           });
           
-          // CRITICAL FIX: Only activate background music if it's not already activated
-          // The useEffect will handle the actual playing when isPlaying becomes true
-          if (isBackgroundMusicPlaying && autoActivateBackgroundMusic && !backgroundMusic) {
-            console.log('🎵 [AUDIO SYNC] Activating default background music in togglePlay (first time)');
-            activateDefaultBackgroundMusic(currentTrack);
-          } else {
-            console.log('🎵 [AUDIO SYNC] Background music already activated or not needed, will sync via useEffect');
-          }
-          
-          // Background music will automatically start due to the useEffect that watches isPlaying
-          // The useEffect will handle starting background music when isPlaying becomes true
+          // Background music activation is handled by the auto-activation useEffect
+          // No need to call activateDefaultBackgroundMusic here as it causes duplicate calls
           console.log('🎵 [AUDIO SYNC] Background music will sync with main audio via useEffect');
         }).catch((error) => {
           console.error('🎵 [AUDIO SYNC] Audio play failed in togglePlay:', error);
