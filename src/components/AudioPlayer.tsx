@@ -1576,13 +1576,13 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={isBackgroundMusicPlaying ? stopBackgroundMusic : (lastPlayingBackgroundTrack ? resumeLastBackgroundMusic : null)}
+                        onClick={isBackgroundMusicPlaying ? stopBackgroundMusic : (lastPlayingBackgroundTrack ? resumeLastBackgroundMusic : () => activateDefaultBackgroundMusic(currentTrack))}
                         className={`h-8 w-8 rounded-full ${
-                          lastPlayingBackgroundTrack 
+                          isBackgroundMusicPlaying || lastPlayingBackgroundTrack
                             ? 'bg-white/20 hover:bg-white/30 text-white' 
                             : 'bg-white/10 hover:bg-white/20 text-white/60'
                         }`}
-                        disabled={!lastPlayingBackgroundTrack}
+                        disabled={false}
                       >
                         {isBackgroundMusicPlaying ? (
                           <VolumeX className="h-4 w-4" />
