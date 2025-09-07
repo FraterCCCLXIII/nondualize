@@ -10,6 +10,13 @@ import { ShareModal } from "./ShareModal";
 import { parseSrtFile, type Caption } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
+// Extend Window interface for mobile Safari detection timeout
+declare global {
+  interface Window {
+    mobileSafariResizeTimeout?: NodeJS.Timeout;
+  }
+}
+
 // Singleton AudioContext to prevent multiple instances in production
 let globalAudioContext: AudioContext | null = null;
 const getAudioContext = (): AudioContext | null => {
@@ -17,7 +24,7 @@ const getAudioContext = (): AudioContext | null => {
   
   if (!globalAudioContext && ('AudioContext' in window || 'webkitAudioContext' in window)) {
     try {
-      globalAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      globalAudioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     } catch (e) {
       console.warn('Failed to create AudioContext:', e);
       return null;
@@ -186,6 +193,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const [captions, setCaptions] = useState<Caption[]>([]);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [mobileSafariBottomPadding, setMobileSafariBottomPadding] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
   const backgroundAudioRef = useRef<HTMLAudioElement>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
@@ -645,6 +653,60 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       updateTrackUrl(initialTrackIndex);
     }
   }, [initialTrackIndex]);
+
+  // Mobile Safari bottom bar detection
+  useEffect(() => {
+    const detectMobileSafariBottomBar = () => {
+      if (typeof window === 'undefined') return;
+      
+      const isMobile = window.innerWidth <= 768;
+      if (!isMobile) return;
+      
+      // Get viewport height
+      const viewportHeight = window.innerHeight;
+      const screenHeight = window.screen.height;
+      
+      // Calculate how much space is taken by browser UI
+      const browserUIHeight = screenHeight - viewportHeight;
+      
+      // Estimate Safari bottom bar height (typically 44-50px when visible)
+      const estimatedBottomBarHeight = browserUIHeight > 0 ? Math.min(browserUIHeight, 50) : 0;
+      
+      // Add extra padding for safety
+      const safePadding = Math.max(estimatedBottomBarHeight + 20, 60); // At least 60px
+      
+      console.log('📱 [MOBILE SAFARI] Bottom bar detection:', {
+        viewportHeight,
+        screenHeight,
+        browserUIHeight,
+        estimatedBottomBarHeight,
+        safePadding,
+        timestamp: new Date().toISOString()
+      });
+      
+      setMobileSafariBottomPadding(safePadding);
+    };
+
+    // Initial detection
+    detectMobileSafariBottomBar();
+    
+    // Listen for viewport changes (when Safari bars show/hide)
+    const handleResize = () => {
+      // Debounce resize events
+      clearTimeout(window.mobileSafariResizeTimeout);
+      window.mobileSafariResizeTimeout = setTimeout(detectMobileSafariBottomBar, 100);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+      clearTimeout(window.mobileSafariResizeTimeout);
+    };
+  }, []);
 
   // Centralized function to stop all audio playback
   const stopAllAudio = () => {
@@ -1374,7 +1436,12 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       )}
 
       {/* Player Controls */}
-      <div className="absolute bottom-0 left-0 right-0 p-2 md:p-6 pb-safe-mobile md:pb-6 mb-4 md:mb-0">
+      <div 
+        className="absolute bottom-0 left-0 right-0 p-2 md:p-6 pb-safe-mobile md:pb-6 mb-4 md:mb-0 audio-player-mobile-safe"
+        style={{
+          paddingBottom: typeof window !== 'undefined' && window.innerWidth <= 768 ? `${mobileSafariBottomPadding}px` : undefined
+        }}
+      >
         <div className="rounded-xl p-2 md:p-4 max-w-2xl">
           {/* Track Info */}
           <div className={`mb-4 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>

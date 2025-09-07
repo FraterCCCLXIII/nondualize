@@ -2,11 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Mobile safe area utilities */
+/* Mobile safe area utilities - Enhanced for Safari */
 @supports (padding: max(0px)) {
   .pb-safe-mobile {
     padding-bottom: max(4rem, env(safe-area-inset-bottom) + 3rem);
   }
+  
+  /* Enhanced safe area for bottom-fixed elements */
+  .pb-safe-mobile-enhanced {
+    padding-bottom: max(5rem, env(safe-area-inset-bottom) + 4rem);
+  }
+  
+  /* For elements that need to be above Safari's bottom bar */
+  .pb-safari-bottom-bar {
+    padding-bottom: max(6rem, env(safe-area-inset-bottom) + 5rem);
+  }
+}
+
+/* Fallback for browsers without env() support */
+.pb-safe-mobile {
+  padding-bottom: 4rem;
+}
+
+.pb-safe-mobile-enhanced {
+  padding-bottom: 5rem;
+}
+
+.pb-safari-bottom-bar {
+  padding-bottom: 6rem;
 }
 
 /* Mobile touch improvements */
@@ -263,7 +286,8 @@ All colors MUST be HSL.
   .fling-minislide {
     display: block;
     width: 100vw;
-    height: 100vh;
+    height: 100vh; /* Fallback for older browsers */
+    height: 100dvh; /* Dynamic viewport height for modern browsers */
     overflow: hidden;
     position: relative;
     background-color: transparent;
@@ -275,7 +299,8 @@ All colors MUST be HSL.
     opacity: 0;
     object-fit: cover;
     width: 100vw;
-    height: 100vh;
+    height: 100vh; /* Fallback for older browsers */
+    height: 100dvh; /* Dynamic viewport height for modern browsers */
   }
 
   @keyframes fling-minislide {
@@ -318,5 +343,23 @@ All colors MUST be HSL.
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* Mobile Safari bottom bar detection utilities */
+.mobile-safari-bottom-safe {
+  /* This class will be dynamically updated by JavaScript */
+  padding-bottom: 6rem; /* Default fallback */
+}
+
+/* Enhanced mobile positioning for audio player */
+@media (max-width: 768px) {
+  .audio-player-mobile-safe {
+    position: fixed;
+    bottom: env(safe-area-inset-bottom, 0);
+    bottom: max(env(safe-area-inset-bottom, 0), 1rem);
+    left: 0;
+    right: 0;
+    z-index: 50;
   }
 }
