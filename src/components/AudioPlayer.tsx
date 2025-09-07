@@ -677,14 +677,13 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             timestamp: new Date().toISOString()
           });
           
-          // CRITICAL FIX: Always ensure background music is activated when user presses play
-          if (isBackgroundMusicPlaying && autoActivateBackgroundMusic) {
-            if (!backgroundMusic) {
-              console.log('🎵 [AUDIO SYNC] Activating default background music in togglePlay (first time)');
-              activateDefaultBackgroundMusic(currentTrack);
-            } else {
-              console.log('🎵 [AUDIO SYNC] Background music already activated, will sync via useEffect');
-            }
+          // CRITICAL FIX: Only activate background music if it's not already activated
+          // The useEffect will handle the actual playing when isPlaying becomes true
+          if (isBackgroundMusicPlaying && autoActivateBackgroundMusic && !backgroundMusic) {
+            console.log('🎵 [AUDIO SYNC] Activating default background music in togglePlay (first time)');
+            activateDefaultBackgroundMusic(currentTrack);
+          } else {
+            console.log('🎵 [AUDIO SYNC] Background music already activated or not needed, will sync via useEffect');
           }
           
           // Background music will automatically start due to the useEffect that watches isPlaying
@@ -945,17 +944,23 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           timestamp: new Date().toISOString()
         });
         
-        // Stop current background music before switching
+        // Only stop current background music if it's different from the new one
         const backgroundAudio = backgroundAudioRef.current;
-        if (backgroundAudio) {
-          console.log('🎵 [AUDIO SYNC] Stopping current background music:', {
+        if (backgroundAudio && backgroundAudio.src !== bgTrack.audioUrl) {
+          console.log('🎵 [AUDIO SYNC] Stopping current background music (different track):', {
             currentSrc: backgroundAudio.src,
+            newSrc: bgTrack.audioUrl,
             currentTime: backgroundAudio.currentTime,
             paused: backgroundAudio.paused,
             timestamp: new Date().toISOString()
           });
           backgroundAudio.pause();
           backgroundAudio.currentTime = 0;
+        } else if (backgroundAudio) {
+          console.log('🎵 [AUDIO SYNC] Background music is already the same track, not stopping:', {
+            currentSrc: backgroundAudio.src,
+            timestamp: new Date().toISOString()
+          });
         }
         
         // Set the new background music source
