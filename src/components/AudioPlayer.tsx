@@ -15,6 +15,11 @@ declare global {
   interface Window {
     mobileSafariResizeTimeout?: NodeJS.Timeout;
   }
+
+  interface WakeLockSentinel {
+    release(): Promise<void>;
+    addEventListener(type: 'release', listener: () => void): void;
+  }
 }
 
 // Singleton AudioContext to prevent multiple instances in production
@@ -33,6 +38,14 @@ const getAudioContext = (): AudioContext | null => {
   
   return globalAudioContext;
 };
+
+// iOS compatibility detection
+const isIOS = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+};
+
 
 interface Track {
   id: string;
@@ -204,6 +217,45 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
   const track = mockTracks[currentTrack];
 
+  // iOS audio mixing refs for background playback compatibility
+  const iosAudioContextRef = useRef<AudioContext | null>(null);
+  const iosMediaStreamDestRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const iosMixedAudioElementRef = useRef<HTMLAudioElement | null>(null);
+
+  // Minimal iOS audio mixing for background playback compatibility
+  const setupIOSAudioMixing = useCallback(async (): Promise<boolean> => {
+    if (!isIOS() || !hasUserInteracted) return false;
+    
+    try {
+      console.log('🍎 [IOS AUDIO] Setting up iOS audio mixing for background playback');
+      
+      // Create Web Audio context
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+      iosAudioContextRef.current = audioContext;
+      
+      // Create MediaStreamDestination for iOS compatibility
+      const mediaStreamDest = audioContext.createMediaStreamDestination();
+      iosMediaStreamDestRef.current = mediaStreamDest;
+      
+      // Create hidden audio element for iOS background playback
+      const mixedAudioElement = document.createElement('audio');
+      mixedAudioElement.setAttribute('playsinline', 'true');
+      mixedAudioElement.hidden = true;
+      mixedAudioElement.srcObject = mediaStreamDest.stream;
+      document.body.appendChild(mixedAudioElement);
+      iosMixedAudioElementRef.current = mixedAudioElement;
+      
+      console.log('🍎 [IOS AUDIO] iOS audio mixing setup complete');
+      return true;
+    } catch (error) {
+      console.warn('🍎 [IOS AUDIO] Failed to setup iOS audio mixing:', error);
+      return false;
+    }
+  }, [hasUserInteracted]);
+
   // Setup Web Audio API for mobile volume control
   const setupWebAudioVolume = useCallback(() => {
     const audio = audioRef.current;
@@ -357,8 +409,10 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     // Setup Web Audio API for volume control after user interaction
     if (hasUserInteracted) {
       setupWebAudioVolume();
+      // Setup iOS audio mixing for background playback compatibility
+      setupIOSAudioMixing();
     }
-  }, [hasUserInteracted, volume, backgroundMusicVolume, setupWebAudioVolume]);
+  }, [hasUserInteracted, volume, backgroundMusicVolume, setupWebAudioVolume, setupIOSAudioMixing]);
 
   // Consolidated audio event handling
   useEffect(() => {
@@ -605,6 +659,18 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           backgroundGainNodeRef.current.disconnect();
           backgroundGainNodeRef.current = null;
         }
+        
+        // iOS audio cleanup
+        if (iosMixedAudioElementRef.current) {
+          iosMixedAudioElementRef.current.remove();
+          iosMixedAudioElementRef.current = null;
+        }
+        if (iosAudioContextRef.current) {
+          iosAudioContextRef.current.close();
+          iosAudioContextRef.current = null;
+        }
+        iosMediaStreamDestRef.current = null;
+        
         console.log('🎵 [VOLUME] Web Audio nodes cleaned up');
       } catch (error) {
         console.warn('🎵 [VOLUME] Error cleaning up Web Audio nodes:', error);
@@ -997,6 +1063,18 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       console.log('🎵 [AUDIO SYNC] Pausing audio and background music');
       // Pause current audio and background music
       audio.pause();
+      
+      // iOS background playback enhancement
+      if (isIOS() && iosMixedAudioElementRef.current) {
+        try {
+          console.log('🍎 [IOS AUDIO] Pausing iOS mixed audio');
+          iosMixedAudioElementRef.current.pause();
+          console.log('🍎 [IOS AUDIO] iOS mixed audio paused successfully');
+        } catch (error) {
+          console.warn('🍎 [IOS AUDIO] Failed to pause iOS mixed audio:', error);
+        }
+      }
+      
       setIsPlaying(false);
       
       // Background music will automatically pause due to the useEffect that watches isPlaying
@@ -1052,13 +1130,24 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         
         setIsPlaying(true);
         
-        audio.play().then(() => {
+        audio.play().then(async () => {
           console.log('🎵 [AUDIO SYNC] Main audio play() promise resolved in togglePlay:', {
             audioCurrentTime: audio.currentTime,
             audioPaused: audio.paused,
             audioDuration: audio.duration,
             timestamp: new Date().toISOString()
           });
+          
+          // iOS background playback enhancement
+          if (isIOS() && iosMixedAudioElementRef.current) {
+            try {
+              console.log('🍎 [IOS AUDIO] Starting iOS mixed audio for background playback');
+              await iosMixedAudioElementRef.current.play();
+              console.log('🍎 [IOS AUDIO] iOS mixed audio started successfully');
+            } catch (error) {
+              console.warn('🍎 [IOS AUDIO] Failed to start iOS mixed audio:', error);
+            }
+          }
           
           // Background music activation is handled by the auto-activation useEffect
           // No need to call activateDefaultBackgroundMusic here as it causes duplicate calls
