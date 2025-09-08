@@ -22,7 +22,7 @@ declare global {
   }
 }
 
-// Singleton AudioContext to prevent multiple instances in production
+// Simplified AudioContext management for mobile compatibility
 let globalAudioContext: AudioContext | null = null;
 const getAudioContext = (): AudioContext | null => {
   if (typeof window === 'undefined') return null;
@@ -30,13 +30,33 @@ const getAudioContext = (): AudioContext | null => {
   if (!globalAudioContext && ('AudioContext' in window || 'webkitAudioContext' in window)) {
     try {
       globalAudioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      console.log('🎵 [AUDIO CONTEXT] Created new AudioContext, state:', globalAudioContext.state);
     } catch (e) {
-      console.warn('Failed to create AudioContext:', e);
+      console.warn('🎵 [AUDIO CONTEXT] Failed to create AudioContext:', e);
       return null;
     }
   }
   
   return globalAudioContext;
+};
+
+// Resume audio context if suspended (critical for mobile)
+const resumeAudioContext = async (): Promise<boolean> => {
+  const audioContext = getAudioContext();
+  if (!audioContext) return false;
+  
+  if (audioContext.state === 'suspended') {
+    try {
+      await audioContext.resume();
+      console.log('🎵 [AUDIO CONTEXT] Resumed suspended audio context');
+      return true;
+    } catch (e) {
+      console.warn('🎵 [AUDIO CONTEXT] Failed to resume audio context:', e);
+      return false;
+    }
+  }
+  
+  return audioContext.state === 'running';
 };
 
 // iOS compatibility detection
@@ -217,193 +237,65 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
   const track = mockTracks[currentTrack];
 
-  // iOS audio mixing refs for background playback compatibility
-  const iosAudioContextRef = useRef<AudioContext | null>(null);
-  const iosMediaStreamDestRef = useRef<MediaStreamAudioDestinationNode | null>(null);
-  const iosMixedAudioElementRef = useRef<HTMLAudioElement | null>(null);
-  const iosVoiceGainRef = useRef<GainNode | null>(null);
-  const iosMusicGainRef = useRef<GainNode | null>(null);
-  const iosMasterGainRef = useRef<GainNode | null>(null);
 
-  // Minimal iOS audio mixing for background playback compatibility
-  const setupIOSAudioMixing = useCallback(async (): Promise<boolean> => {
-    if (!isIOS() || !hasUserInteracted) return false;
-    
-    try {
-      console.log('🍎 [IOS AUDIO] Setting up iOS audio mixing for background playback');
-      
-      // Create Web Audio context
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      if (audioContext.state === 'suspended') {
-        await audioContext.resume();
-      }
-      iosAudioContextRef.current = audioContext;
-      
-      // Create MediaStreamDestination for iOS compatibility
-      const mediaStreamDest = audioContext.createMediaStreamDestination();
-      iosMediaStreamDestRef.current = mediaStreamDest;
-      
-      // Create gain nodes for mixing
-      const voiceGain = audioContext.createGain();
-      const musicGain = audioContext.createGain();
-      const masterGain = audioContext.createGain();
-      
-      // Set initial gain values
-      voiceGain.gain.value = volume;
-      musicGain.gain.value = backgroundMusicVolume;
-      masterGain.gain.value = 1.0;
-      
-      // Connect audio graph: sources -> gains -> master -> MediaStreamDestination
-      voiceGain.connect(masterGain);
-      musicGain.connect(masterGain);
-      masterGain.connect(mediaStreamDest);
-      
-      // Store gain nodes for later use
-      iosVoiceGainRef.current = voiceGain;
-      iosMusicGainRef.current = musicGain;
-      iosMasterGainRef.current = masterGain;
-      
-      // Create hidden audio element for iOS background playback
-      const mixedAudioElement = document.createElement('audio');
-      mixedAudioElement.setAttribute('playsinline', 'true');
-      mixedAudioElement.hidden = true;
-      mixedAudioElement.srcObject = mediaStreamDest.stream;
-      document.body.appendChild(mixedAudioElement);
-      iosMixedAudioElementRef.current = mixedAudioElement;
-      
-      console.log('🍎 [IOS AUDIO] iOS audio mixing setup complete');
-      return true;
-    } catch (error) {
-      console.warn('🍎 [IOS AUDIO] Failed to setup iOS audio mixing:', error);
-      return false;
-    }
-  }, [hasUserInteracted, volume, backgroundMusicVolume]);
 
-  // Load audio buffer for iOS mixing
-  const loadIOSAudioBuffer = useCallback(async (url: string): Promise<AudioBuffer | null> => {
-    if (!iosAudioContextRef.current) return null;
-    
-    try {
-      console.log('🍎 [IOS AUDIO] Loading audio buffer:', url);
-      const response = await fetch(url);
-      const arrayBuffer = await response.arrayBuffer();
-      const audioBuffer = await iosAudioContextRef.current.decodeAudioData(arrayBuffer);
-      console.log('🍎 [IOS AUDIO] Audio buffer loaded:', audioBuffer.duration);
-      return audioBuffer;
-    } catch (error) {
-      console.error('🍎 [IOS AUDIO] Failed to load audio buffer:', error);
-      return null;
-    }
-  }, []);
-
-  // iOS audio sources refs
-  const iosVoiceSourceRef = useRef<AudioBufferSourceNode | null>(null);
-  const iosMusicSourceRef = useRef<AudioBufferSourceNode | null>(null);
-
-  // Start iOS mixed audio playback
-  const startIOSMixedAudio = useCallback(async () => {
-    if (!isIOS() || !iosAudioContextRef.current || !iosVoiceGainRef.current || !iosMusicGainRef.current) return;
-    
-    try {
-      console.log('🍎 [IOS AUDIO] Starting iOS mixed audio playback');
-      
-      const audioContext = iosAudioContextRef.current;
-      const voiceGain = iosVoiceGainRef.current;
-      const musicGain = iosMusicGainRef.current;
-      
-      // Load and start voice audio
-      const voiceBuffer = await loadIOSAudioBuffer(track.audioUrl);
-      if (voiceBuffer) {
-        const voiceSource = audioContext.createBufferSource();
-        voiceSource.buffer = voiceBuffer;
-        voiceSource.connect(voiceGain);
-        voiceSource.start(0, currentTime);
-        iosVoiceSourceRef.current = voiceSource;
-        console.log('🍎 [IOS AUDIO] Voice audio started');
-      }
-      
-      // Load and start background music if enabled
-      if (isBackgroundMusicPlaying && backgroundMusic) {
-        const musicBuffer = await loadIOSAudioBuffer(backgroundMusic);
-        if (musicBuffer) {
-          const musicSource = audioContext.createBufferSource();
-          musicSource.buffer = musicBuffer;
-          musicSource.loop = true;
-          musicSource.connect(musicGain);
-          musicSource.start(0);
-          iosMusicSourceRef.current = musicSource;
-          console.log('🍎 [IOS AUDIO] Background music started');
-        }
-      }
-      
-    } catch (error) {
-      console.error('🍎 [IOS AUDIO] Failed to start mixed audio:', error);
-    }
-  }, [track.audioUrl, currentTime, isBackgroundMusicPlaying, backgroundMusic, loadIOSAudioBuffer]);
-
-  // Stop iOS mixed audio playback
-  const stopIOSMixedAudio = useCallback(() => {
-    if (!isIOS()) return;
-    
-    try {
-      console.log('🍎 [IOS AUDIO] Stopping iOS mixed audio playback');
-      
-      if (iosVoiceSourceRef.current) {
-        iosVoiceSourceRef.current.stop();
-        iosVoiceSourceRef.current = null;
-      }
-      
-      if (iosMusicSourceRef.current) {
-        iosMusicSourceRef.current.stop();
-        iosMusicSourceRef.current = null;
-      }
-      
-      console.log('🍎 [IOS AUDIO] iOS mixed audio stopped');
-    } catch (error) {
-      console.warn('🍎 [IOS AUDIO] Error stopping mixed audio:', error);
-    }
-  }, []);
-
-  // Setup Web Audio API for mobile volume control
+  // Setup Web Audio API for mobile volume control - simplified approach
   const setupWebAudioVolume = useCallback(() => {
     const audio = audioRef.current;
     const backgroundAudio = backgroundAudioRef.current;
     
     try {
       const audioContext = getAudioContext();
-      if (!audioContext) return;
-
-      // Setup main audio gain node
-      if (audio && !audioSourceRef.current) {
-        const source = audioContext.createMediaElementSource(audio);
-        const gainNode = audioContext.createGain();
-        
-        source.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        audioSourceRef.current = source;
-        gainNodeRef.current = gainNode;
-        gainNode.gain.value = volume;
-        
-        console.log('🎵 [VOLUME] Main audio Web Audio API setup complete');
+      if (!audioContext) {
+        console.log('🎵 [VOLUME] AudioContext not available, using HTML5 audio controls');
+        return;
       }
 
-      // Setup background audio gain node
+      // Ensure audio context is running
+      if (audioContext.state === 'suspended') {
+        console.log('🎵 [VOLUME] AudioContext suspended, will resume on user interaction');
+        return;
+      }
+
+      // Setup main audio gain node (only if not already set up)
+      if (audio && !audioSourceRef.current) {
+        try {
+          const source = audioContext.createMediaElementSource(audio);
+          const gainNode = audioContext.createGain();
+          
+          source.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          audioSourceRef.current = source;
+          gainNodeRef.current = gainNode;
+          gainNode.gain.value = volume;
+          
+          console.log('🎵 [VOLUME] Main audio Web Audio API setup complete');
+        } catch (error) {
+          console.warn('🎵 [VOLUME] Main audio Web Audio setup failed:', error);
+        }
+      }
+
+      // Setup background audio gain node (only if not already set up)
       if (backgroundAudio && !backgroundAudioSourceRef.current) {
-        const bgSource = audioContext.createMediaElementSource(backgroundAudio);
-        const bgGainNode = audioContext.createGain();
-        
-        bgSource.connect(bgGainNode);
-        bgGainNode.connect(audioContext.destination);
-        
-        backgroundAudioSourceRef.current = bgSource;
-        backgroundGainNodeRef.current = bgGainNode;
-        bgGainNode.gain.value = backgroundMusicVolume * volume;
-        
-        console.log('🎵 [VOLUME] Background audio Web Audio API setup complete');
+        try {
+          const bgSource = audioContext.createMediaElementSource(backgroundAudio);
+          const bgGainNode = audioContext.createGain();
+          
+          bgSource.connect(bgGainNode);
+          bgGainNode.connect(audioContext.destination);
+          
+          backgroundAudioSourceRef.current = bgSource;
+          backgroundGainNodeRef.current = bgGainNode;
+          bgGainNode.gain.value = backgroundMusicVolume * volume;
+          
+          console.log('🎵 [VOLUME] Background audio Web Audio API setup complete');
+        } catch (error) {
+          console.warn('🎵 [VOLUME] Background audio Web Audio setup failed:', error);
+        }
       }
     } catch (error) {
-      console.warn('🎵 [VOLUME] Web Audio API setup failed:', error);
+      console.warn('🎵 [VOLUME] Web Audio API setup failed, falling back to HTML5 audio:', error);
     }
   }, [volume, backgroundMusicVolume]);
 
@@ -458,57 +350,37 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     }
   }, []); // Run once on mount
 
-  // Mobile audio context initialization
+  // Simplified mobile audio initialization
   useEffect(() => {
     const initMobileAudio = () => {
       const audio = audioRef.current;
       const backgroundAudio = backgroundAudioRef.current;
       
       if (audio) {
-        // Prepare audio for mobile playback
-        audio.muted = false;
-        audio.volume = volume;
-        
-        // Ensure mobile-specific attributes are set
+        // Set essential mobile attributes
         audio.setAttribute('playsinline', 'true');
         audio.setAttribute('webkit-playsinline', 'true');
-        audio.setAttribute('controls', 'false');
-        
-        // Enable background playback
-        audio.setAttribute('preload', 'auto');
+        audio.preload = 'metadata'; // Changed from 'auto' to reduce memory usage
         audio.crossOrigin = 'anonymous';
         
-        // Configure for background playback
-        audio.addEventListener('loadstart', () => {
-          console.log('📱 [BACKGROUND PLAYBACK] Audio load started');
-        });
+        // Set volume via HTML5 audio (fallback for when Web Audio isn't available)
+        audio.volume = volume;
         
-        audio.addEventListener('canplay', () => {
-          console.log('📱 [BACKGROUND PLAYBACK] Audio can play');
-        });
-        
-        // Try to create audio context for mobile browsers
-        try {
-          const audioContext = getAudioContext();
-          if (audioContext && audioContext.state === 'suspended') {
-            // Audio context is suspended, will resume on user interaction
-          }
-        } catch (e) {
-          // Audio context not available
-        }
+        console.log('📱 [MOBILE AUDIO] Main audio initialized for mobile');
       }
       
       if (backgroundAudio) {
-        // Prepare background audio for mobile playback
-        backgroundAudio.muted = false;
-        backgroundAudio.volume = backgroundMusicVolume;
+        // Set essential mobile attributes for background music
         backgroundAudio.setAttribute('playsinline', 'true');
         backgroundAudio.setAttribute('webkit-playsinline', 'true');
-        backgroundAudio.setAttribute('controls', 'false');
-        
-        // Enable background playback for background music
-        backgroundAudio.setAttribute('preload', 'auto');
+        backgroundAudio.preload = 'metadata';
         backgroundAudio.crossOrigin = 'anonymous';
+        backgroundAudio.loop = true;
+        
+        // Set volume via HTML5 audio (fallback)
+        backgroundAudio.volume = backgroundMusicVolume * volume;
+        
+        console.log('📱 [MOBILE AUDIO] Background audio initialized for mobile');
       }
     };
 
@@ -1038,48 +910,63 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     };
   }, [isPlaying]);
 
-  // Wake Lock API for screen-off playback
+  // Media Session API for background playback (better than Wake Lock for audio)
   useEffect(() => {
-    let wakeLock: WakeLockSentinel | null = null;
-
-    const requestWakeLock = async () => {
-      if (!('wakeLock' in navigator)) {
-        console.log('📱 [WAKE LOCK] Wake Lock API not supported');
-        return;
-      }
-
-      try {
-        wakeLock = await navigator.wakeLock.request('screen');
-        console.log('📱 [WAKE LOCK] Screen wake lock acquired');
-        
-        wakeLock.addEventListener('release', () => {
-          console.log('📱 [WAKE LOCK] Screen wake lock released');
-        });
-      } catch (err) {
-        console.log('📱 [WAKE LOCK] Failed to acquire wake lock:', err);
-      }
-    };
-
-    const releaseWakeLock = async () => {
-      if (wakeLock) {
-        await wakeLock.release();
-        wakeLock = null;
-        console.log('📱 [WAKE LOCK] Screen wake lock manually released');
-      }
-    };
-
-    // Request wake lock when audio starts playing
-    if (isPlaying) {
-      requestWakeLock();
-    } else {
-      releaseWakeLock();
+    if (!('mediaSession' in navigator)) {
+      console.log('📱 [MEDIA SESSION] Media Session API not supported');
+      return;
     }
 
-    // Cleanup on unmount
-    return () => {
-      releaseWakeLock();
-    };
-  }, [isPlaying]);
+    try {
+      // Set media metadata
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.title,
+        artist: 'Andrew Visions Zen',
+        album: 'Spiritual Teachings',
+        artwork: [
+          { src: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' }
+        ]
+      });
+
+      // Set playback state
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+
+      // Set action handlers for media controls
+      navigator.mediaSession.setActionHandler('play', () => {
+        console.log('📱 [MEDIA SESSION] Play action triggered');
+        if (!isPlaying) togglePlay();
+      });
+
+      navigator.mediaSession.setActionHandler('pause', () => {
+        console.log('📱 [MEDIA SESSION] Pause action triggered');
+        if (isPlaying) togglePlay();
+      });
+
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        console.log('📱 [MEDIA SESSION] Previous track action triggered');
+        handlePrevious(false);
+      });
+
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        console.log('📱 [MEDIA SESSION] Next track action triggered');
+        handleNext(false);
+      });
+
+      // Set position state for scrubbing
+      if (isPlaying && duration > 0) {
+        navigator.mediaSession.setPositionState({
+          duration: duration,
+          playbackRate: 1.0,
+          position: currentTime
+        });
+      }
+
+      console.log('📱 [MEDIA SESSION] Media session configured for background playback');
+    } catch (error) {
+      console.warn('📱 [MEDIA SESSION] Failed to configure media session:', error);
+    }
+  }, [track.title, isPlaying, duration, currentTime]);
 
   // Centralized function to stop all audio playback
   const stopAllAudio = () => {
@@ -1136,7 +1023,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     setCurrentTime(0);
   };
 
-  const togglePlay = () => {
+  const togglePlay = async () => {
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -1156,38 +1043,13 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     // Mark that user has interacted with audio
     setHasUserInteracted(true);
 
-    // Resume audio context if suspended (important for mobile/production)
-    const resumeAudioContext = async () => {
-      try {
-        const audioContext = getAudioContext();
-        if (audioContext && audioContext.state === 'suspended') {
-          console.log('🎵 [AUDIO SYNC] Resuming suspended audio context in togglePlay');
-          await audioContext.resume();
-          console.log('🎵 [AUDIO SYNC] Audio context resumed successfully in togglePlay');
-        } else {
-          console.log('🎵 [AUDIO SYNC] Audio context state in togglePlay:', audioContext?.state);
-        }
-      } catch (e) {
-        console.warn('🎵 [AUDIO SYNC] Audio context resume failed in togglePlay:', e);
-      }
-    };
+    // Resume audio context if suspended (important for mobile)
+    const contextResumed = await resumeAudioContext();
 
     if (isPlaying) {
       console.log('🎵 [AUDIO SYNC] Pausing audio and background music');
       // Pause current audio and background music
       audio.pause();
-      
-      // iOS background playback enhancement
-      if (isIOS() && iosMixedAudioElementRef.current) {
-        try {
-          console.log('🍎 [IOS AUDIO] Pausing iOS mixed audio');
-          stopIOSMixedAudio();
-          iosMixedAudioElementRef.current.pause();
-          console.log('🍎 [IOS AUDIO] iOS mixed audio paused successfully');
-        } catch (error) {
-          console.warn('🍎 [IOS AUDIO] Failed to pause iOS mixed audio:', error);
-        }
-      }
       
       setIsPlaying(false);
       
@@ -1196,8 +1058,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       console.log('🎵 [AUDIO SYNC] Background music will sync with main audio pause via useEffect');
     } else {
       console.log('🎵 [AUDIO SYNC] Starting audio playback');
-      // Resume audio context first
-      resumeAudioContext();
       
       // Ensure audio has the correct source and is loaded
       if (audio.src !== track.audioUrl) {
@@ -1252,17 +1112,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             timestamp: new Date().toISOString()
           });
           
-          // iOS background playback enhancement
-          if (isIOS() && iosMixedAudioElementRef.current) {
-            try {
-              console.log('🍎 [IOS AUDIO] Starting iOS mixed audio for background playback');
-              await startIOSMixedAudio();
-              await iosMixedAudioElementRef.current.play();
-              console.log('🍎 [IOS AUDIO] iOS mixed audio started successfully');
-            } catch (error) {
-              console.warn('🍎 [IOS AUDIO] Failed to start iOS mixed audio:', error);
-            }
-          }
+
           
           // Background music activation is handled by the auto-activation useEffect
           // No need to call activateDefaultBackgroundMusic here as it causes duplicate calls
@@ -1316,15 +1166,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       if (autoPlay) {
         const playPrevTrack = async () => {
           
-          // Resume audio context if suspended (important for mobile/production)
-          try {
-            const audioContext = getAudioContext();
-            if (audioContext && audioContext.state === 'suspended') {
-              await audioContext.resume();
-            }
-          } catch (e) {
-            console.warn('Audio context resume failed:', e);
-          }
+          // Resume audio context if suspended (important for mobile)
+          await resumeAudioContext();
           
           audio.play().then(() => {
             console.log('🎵 [AUDIO SYNC] Previous track play() promise resolved successfully:', {
@@ -1423,19 +1266,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             timestamp: new Date().toISOString()
           });
           
-          // Resume audio context if suspended (important for mobile/production)
-          try {
-            const audioContext = getAudioContext();
-            if (audioContext && audioContext.state === 'suspended') {
-              console.log('🎵 [AUDIO SYNC] Resuming suspended audio context');
-              await audioContext.resume();
-              console.log('🎵 [AUDIO SYNC] Audio context resumed successfully');
-            } else {
-              console.log('🎵 [AUDIO SYNC] Audio context state:', audioContext?.state);
-            }
-          } catch (e) {
-            console.warn('🎵 [AUDIO SYNC] Audio context resume failed:', e);
-          }
+          // Resume audio context if suspended (important for mobile)
+          await resumeAudioContext();
           
           console.log('🎵 [AUDIO SYNC] Attempting to play audio...');
           audio.play().then(() => {
