@@ -769,94 +769,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     };
   }, []);
 
-  // Media Session API and background playback support
-  useEffect(() => {
-    const setupMediaSession = () => {
-      if (!('mediaSession' in navigator)) {
-        console.log('📱 [MEDIA SESSION] Media Session API not supported');
-        return;
-      }
 
-      console.log('📱 [MEDIA SESSION] Setting up Media Session API');
-
-      // Set initial metadata
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: track.title,
-        artist: 'Andrew Cohen',
-        album: 'Visions of Zen',
-        artwork: [
-          { src: '/assets/andrew-1.png', sizes: '96x96', type: 'image/png' },
-          { src: '/assets/andrew-1.png', sizes: '128x128', type: 'image/png' },
-          { src: '/assets/andrew-1.png', sizes: '192x192', type: 'image/png' },
-          { src: '/assets/andrew-1.png', sizes: '256x256', type: 'image/png' },
-          { src: '/assets/andrew-1.png', sizes: '384x384', type: 'image/png' },
-          { src: '/assets/andrew-1.png', sizes: '512x512', type: 'image/png' },
-        ]
-      });
-
-      // Set playback state
-      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
-
-      // Set position state
-      navigator.mediaSession.setPositionState({
-        duration: duration,
-        playbackRate: 1,
-        position: currentTime
-      });
-
-      // Handle media session actions
-      navigator.mediaSession.setActionHandler('play', () => {
-        console.log('📱 [MEDIA SESSION] Play action triggered');
-        togglePlay();
-      });
-
-      navigator.mediaSession.setActionHandler('pause', () => {
-        console.log('📱 [MEDIA SESSION] Pause action triggered');
-        togglePlay();
-      });
-
-      navigator.mediaSession.setActionHandler('previoustrack', () => {
-        console.log('📱 [MEDIA SESSION] Previous track action triggered');
-        handlePrevious(false);
-      });
-
-      navigator.mediaSession.setActionHandler('nexttrack', () => {
-        console.log('📱 [MEDIA SESSION] Next track action triggered');
-        handleNext(false);
-      });
-
-      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-        console.log('📱 [MEDIA SESSION] Seek backward action triggered', details);
-        const audio = audioRef.current;
-        if (audio) {
-          const seekTime = Math.max(0, audio.currentTime - (details.seekOffset || 10));
-          audio.currentTime = seekTime;
-          setCurrentTime(seekTime);
-        }
-      });
-
-      navigator.mediaSession.setActionHandler('seekforward', (details) => {
-        console.log('📱 [MEDIA SESSION] Seek forward action triggered', details);
-        const audio = audioRef.current;
-        if (audio) {
-          const seekTime = Math.min(audio.duration, audio.currentTime + (details.seekOffset || 10));
-          audio.currentTime = seekTime;
-          setCurrentTime(seekTime);
-        }
-      });
-
-      navigator.mediaSession.setActionHandler('seekto', (details) => {
-        console.log('📱 [MEDIA SESSION] Seek to action triggered', details);
-        const audio = audioRef.current;
-        if (audio && details.seekTime !== undefined) {
-          audio.currentTime = details.seekTime;
-          setCurrentTime(details.seekTime);
-        }
-      });
-    };
-
-    setupMediaSession();
-  }, [track.title, isPlaying, duration, currentTime]);
 
   // Page visibility change handling for background playback
   useEffect(() => {
@@ -918,14 +831,18 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
 
       // Set action handlers for media controls
-      navigator.mediaSession.setActionHandler('play', () => {
+      navigator.mediaSession.setActionHandler('play', async () => {
         console.log('📱 [MEDIA SESSION] Play action triggered');
-        if (!isPlaying) togglePlay();
+        if (!isPlaying) {
+          await togglePlay();
+        }
       });
 
-      navigator.mediaSession.setActionHandler('pause', () => {
+      navigator.mediaSession.setActionHandler('pause', async () => {
         console.log('📱 [MEDIA SESSION] Pause action triggered');
-        if (isPlaying) togglePlay();
+        if (isPlaying) {
+          await togglePlay();
+        }
       });
 
       navigator.mediaSession.setActionHandler('previoustrack', () => {
@@ -936,6 +853,35 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       navigator.mediaSession.setActionHandler('nexttrack', () => {
         console.log('📱 [MEDIA SESSION] Next track action triggered');
         handleNext(false);
+      });
+
+      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+        console.log('📱 [MEDIA SESSION] Seek backward action triggered', details);
+        const audio = audioRef.current;
+        if (audio) {
+          const seekTime = Math.max(0, audio.currentTime - (details.seekOffset || 10));
+          audio.currentTime = seekTime;
+          setCurrentTime(seekTime);
+        }
+      });
+
+      navigator.mediaSession.setActionHandler('seekforward', (details) => {
+        console.log('📱 [MEDIA SESSION] Seek forward action triggered', details);
+        const audio = audioRef.current;
+        if (audio) {
+          const seekTime = Math.min(audio.duration, audio.currentTime + (details.seekOffset || 10));
+          audio.currentTime = seekTime;
+          setCurrentTime(seekTime);
+        }
+      });
+
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        console.log('📱 [MEDIA SESSION] Seek to action triggered', details);
+        const audio = audioRef.current;
+        if (audio && details.seekTime !== undefined) {
+          audio.currentTime = details.seekTime;
+          setCurrentTime(details.seekTime);
+        }
       });
 
       // Set position state for scrubbing
