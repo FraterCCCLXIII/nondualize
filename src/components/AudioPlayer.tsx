@@ -235,6 +235,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const audioSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const backgroundAudioSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
 
+
   const track = mockTracks[currentTrack];
 
 
@@ -298,6 +299,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       console.warn('🎵 [VOLUME] Web Audio API setup failed, falling back to HTML5 audio:', error);
     }
   }, [volume, backgroundMusicVolume]);
+
 
   // Debug: Track isPlaying state changes
   useEffect(() => {
@@ -389,10 +391,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     // Setup Web Audio API for volume control after user interaction
     if (hasUserInteracted) {
       setupWebAudioVolume();
-      // Setup iOS audio mixing for background playback compatibility
-      setupIOSAudioMixing();
     }
-  }, [hasUserInteracted, volume, backgroundMusicVolume, setupWebAudioVolume, setupIOSAudioMixing]);
+  }, [hasUserInteracted, volume, backgroundMusicVolume, setupWebAudioVolume]);
 
   // Consolidated audio event handling
   useEffect(() => {
@@ -640,21 +640,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           backgroundGainNodeRef.current = null;
         }
         
-        // iOS audio cleanup
-        if (iosMixedAudioElementRef.current) {
-          iosMixedAudioElementRef.current.remove();
-          iosMixedAudioElementRef.current = null;
-        }
-        if (iosAudioContextRef.current) {
-          iosAudioContextRef.current.close();
-          iosAudioContextRef.current = null;
-        }
-        iosMediaStreamDestRef.current = null;
-        iosVoiceGainRef.current = null;
-        iosMusicGainRef.current = null;
-        iosMasterGainRef.current = null;
-        iosVoiceSourceRef.current = null;
-        iosMusicSourceRef.current = null;
         
         console.log('🎵 [VOLUME] Web Audio nodes cleaned up');
       } catch (error) {
@@ -1051,6 +1036,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       // Pause current audio and background music
       audio.pause();
       
+      
       setIsPlaying(false);
       
       // Background music will automatically pause due to the useEffect that watches isPlaying
@@ -1112,7 +1098,6 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             timestamp: new Date().toISOString()
           });
           
-
           
           // Background music activation is handled by the auto-activation useEffect
           // No need to call activateDefaultBackgroundMusic here as it causes duplicate calls
