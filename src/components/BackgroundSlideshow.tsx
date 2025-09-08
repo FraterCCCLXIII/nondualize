@@ -63,25 +63,58 @@ interface BackgroundSlideshowProps {
 
 export function BackgroundSlideshow({ trackIndex, isTransitioning = false }: BackgroundSlideshowProps) {
   const [currentImages, setCurrentImages] = useState<string[]>([]);
+  const [previousImages, setPreviousImages] = useState<string[]>([]);
+  const [showPrevious, setShowPrevious] = useState(false);
 
   // Get the image set for the current track
   const images = trackImageSets[trackIndex] || trackImageSets[0];
 
   useEffect(() => {
-    setCurrentImages(images);
-  }, [trackIndex, images]);
+    if (JSON.stringify(images) !== JSON.stringify(currentImages)) {
+      // Store previous images for smooth transition
+      setPreviousImages(currentImages);
+      setShowPrevious(true);
+      
+      // Set new images
+      setCurrentImages(images);
+      
+      // Hide previous images after transition
+      const timer = setTimeout(() => {
+        setShowPrevious(false);
+        setPreviousImages([]);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [trackIndex, images, currentImages]);
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {/* CSS Animated Slideshow Container */}
-      <div className={`fling-minislide transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+      {/* Previous Images (fading out) */}
+      {showPrevious && previousImages.length > 0 && (
+        <div className="fling-minislide transition-opacity duration-500 opacity-0">
+          {previousImages.map((image, index) => (
+            <img
+              key={`prev-${index}`}
+              src={image}
+              alt={`Previous Background ${index + 1}`}
+              style={{
+                animationDelay: `${index * 12}s`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Current Images (fading in) */}
+      <div className={`fling-minislide transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
         {currentImages.map((image, index) => (
           <img
             key={`${trackIndex}-${index}`}
             src={image}
             alt={`Background ${index + 1}`}
             style={{
-              animationDelay: `${index * 8}s`,
+              animationDelay: `${index * 12}s`,
             }}
           />
         ))}
