@@ -221,6 +221,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const iosAudioContextRef = useRef<AudioContext | null>(null);
   const iosMediaStreamDestRef = useRef<MediaStreamAudioDestinationNode | null>(null);
   const iosMixedAudioElementRef = useRef<HTMLAudioElement | null>(null);
+  const iosVoiceGainRef = useRef<GainNode | null>(null);
+  const iosMusicGainRef = useRef<GainNode | null>(null);
+  const iosMasterGainRef = useRef<GainNode | null>(null);
 
   // Minimal iOS audio mixing for background playback compatibility
   const setupIOSAudioMixing = useCallback(async (): Promise<boolean> => {
@@ -240,6 +243,26 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       const mediaStreamDest = audioContext.createMediaStreamDestination();
       iosMediaStreamDestRef.current = mediaStreamDest;
       
+      // Create gain nodes for mixing
+      const voiceGain = audioContext.createGain();
+      const musicGain = audioContext.createGain();
+      const masterGain = audioContext.createGain();
+      
+      // Set initial gain values
+      voiceGain.gain.value = volume;
+      musicGain.gain.value = backgroundMusicVolume;
+      masterGain.gain.value = 1.0;
+      
+      // Connect audio graph: sources -> gains -> master -> MediaStreamDestination
+      voiceGain.connect(masterGain);
+      musicGain.connect(masterGain);
+      masterGain.connect(mediaStreamDest);
+      
+      // Store gain nodes for later use
+      iosVoiceGainRef.current = voiceGain;
+      iosMusicGainRef.current = musicGain;
+      iosMasterGainRef.current = masterGain;
+      
       // Create hidden audio element for iOS background playback
       const mixedAudioElement = document.createElement('audio');
       mixedAudioElement.setAttribute('playsinline', 'true');
@@ -254,7 +277,92 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       console.warn('🍎 [IOS AUDIO] Failed to setup iOS audio mixing:', error);
       return false;
     }
-  }, [hasUserInteracted]);
+  }, [hasUserInteracted, volume, backgroundMusicVolume]);
+
+  // Load audio buffer for iOS mixing
+  const loadIOSAudioBuffer = useCallback(async (url: string): Promise<AudioBuffer | null> => {
+    if (!iosAudioContextRef.current) return null;
+    
+    try {
+      console.log('🍎 [IOS AUDIO] Loading audio buffer:', url);
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await iosAudioContextRef.current.decodeAudioData(arrayBuffer);
+      console.log('🍎 [IOS AUDIO] Audio buffer loaded:', audioBuffer.duration);
+      return audioBuffer;
+    } catch (error) {
+      console.error('🍎 [IOS AUDIO] Failed to load audio buffer:', error);
+      return null;
+    }
+  }, []);
+
+  // iOS audio sources refs
+  const iosVoiceSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const iosMusicSourceRef = useRef<AudioBufferSourceNode | null>(null);
+
+  // Start iOS mixed audio playback
+  const startIOSMixedAudio = useCallback(async () => {
+    if (!isIOS() || !iosAudioContextRef.current || !iosVoiceGainRef.current || !iosMusicGainRef.current) return;
+    
+    try {
+      console.log('🍎 [IOS AUDIO] Starting iOS mixed audio playback');
+      
+      const audioContext = iosAudioContextRef.current;
+      const voiceGain = iosVoiceGainRef.current;
+      const musicGain = iosMusicGainRef.current;
+      
+      // Load and start voice audio
+      const voiceBuffer = await loadIOSAudioBuffer(track.audioUrl);
+      if (voiceBuffer) {
+        const voiceSource = audioContext.createBufferSource();
+        voiceSource.buffer = voiceBuffer;
+        voiceSource.connect(voiceGain);
+        voiceSource.start(0, currentTime);
+        iosVoiceSourceRef.current = voiceSource;
+        console.log('🍎 [IOS AUDIO] Voice audio started');
+      }
+      
+      // Load and start background music if enabled
+      if (isBackgroundMusicPlaying && backgroundMusic) {
+        const musicBuffer = await loadIOSAudioBuffer(backgroundMusic);
+        if (musicBuffer) {
+          const musicSource = audioContext.createBufferSource();
+          musicSource.buffer = musicBuffer;
+          musicSource.loop = true;
+          musicSource.connect(musicGain);
+          musicSource.start(0);
+          iosMusicSourceRef.current = musicSource;
+          console.log('🍎 [IOS AUDIO] Background music started');
+        }
+      }
+      
+    } catch (error) {
+      console.error('🍎 [IOS AUDIO] Failed to start mixed audio:', error);
+    }
+  }, [track.audioUrl, currentTime, isBackgroundMusicPlaying, backgroundMusic, loadIOSAudioBuffer]);
+
+  // Stop iOS mixed audio playback
+  const stopIOSMixedAudio = useCallback(() => {
+    if (!isIOS()) return;
+    
+    try {
+      console.log('🍎 [IOS AUDIO] Stopping iOS mixed audio playback');
+      
+      if (iosVoiceSourceRef.current) {
+        iosVoiceSourceRef.current.stop();
+        iosVoiceSourceRef.current = null;
+      }
+      
+      if (iosMusicSourceRef.current) {
+        iosMusicSourceRef.current.stop();
+        iosMusicSourceRef.current = null;
+      }
+      
+      console.log('🍎 [IOS AUDIO] iOS mixed audio stopped');
+    } catch (error) {
+      console.warn('🍎 [IOS AUDIO] Error stopping mixed audio:', error);
+    }
+  }, []);
 
   // Setup Web Audio API for mobile volume control
   const setupWebAudioVolume = useCallback(() => {
@@ -670,6 +778,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           iosAudioContextRef.current = null;
         }
         iosMediaStreamDestRef.current = null;
+        iosVoiceGainRef.current = null;
+        iosMusicGainRef.current = null;
+        iosMasterGainRef.current = null;
+        iosVoiceSourceRef.current = null;
+        iosMusicSourceRef.current = null;
         
         console.log('🎵 [VOLUME] Web Audio nodes cleaned up');
       } catch (error) {
@@ -1068,6 +1181,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       if (isIOS() && iosMixedAudioElementRef.current) {
         try {
           console.log('🍎 [IOS AUDIO] Pausing iOS mixed audio');
+          stopIOSMixedAudio();
           iosMixedAudioElementRef.current.pause();
           console.log('🍎 [IOS AUDIO] iOS mixed audio paused successfully');
         } catch (error) {
@@ -1142,6 +1256,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           if (isIOS() && iosMixedAudioElementRef.current) {
             try {
               console.log('🍎 [IOS AUDIO] Starting iOS mixed audio for background playback');
+              await startIOSMixedAudio();
               await iosMixedAudioElementRef.current.play();
               console.log('🍎 [IOS AUDIO] iOS mixed audio started successfully');
             } catch (error) {
