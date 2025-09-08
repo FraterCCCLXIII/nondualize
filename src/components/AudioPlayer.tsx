@@ -194,6 +194,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [mobileSafariBottomPadding, setMobileSafariBottomPadding] = useState(0);
+  const [isPageVisible, setIsPageVisible] = useState(true);
   const audioRef = useRef<HTMLAudioElement>(null);
   const backgroundAudioRef = useRef<HTMLAudioElement>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
@@ -313,6 +314,19 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         audio.setAttribute('webkit-playsinline', 'true');
         audio.setAttribute('controls', 'false');
         
+        // Enable background playback
+        audio.setAttribute('preload', 'auto');
+        audio.crossOrigin = 'anonymous';
+        
+        // Configure for background playback
+        audio.addEventListener('loadstart', () => {
+          console.log('📱 [BACKGROUND PLAYBACK] Audio load started');
+        });
+        
+        audio.addEventListener('canplay', () => {
+          console.log('📱 [BACKGROUND PLAYBACK] Audio can play');
+        });
+        
         // Try to create audio context for mobile browsers
         try {
           const audioContext = getAudioContext();
@@ -331,6 +345,10 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         backgroundAudio.setAttribute('playsinline', 'true');
         backgroundAudio.setAttribute('webkit-playsinline', 'true');
         backgroundAudio.setAttribute('controls', 'false');
+        
+        // Enable background playback for background music
+        backgroundAudio.setAttribute('preload', 'auto');
+        backgroundAudio.crossOrigin = 'anonymous';
       }
     };
 
@@ -714,6 +732,175 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       clearTimeout(window.mobileSafariResizeTimeout);
     };
   }, []);
+
+  // Media Session API and background playback support
+  useEffect(() => {
+    const setupMediaSession = () => {
+      if (!('mediaSession' in navigator)) {
+        console.log('📱 [MEDIA SESSION] Media Session API not supported');
+        return;
+      }
+
+      console.log('📱 [MEDIA SESSION] Setting up Media Session API');
+
+      // Set initial metadata
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.title,
+        artist: 'Andrew Cohen',
+        album: 'Visions of Zen',
+        artwork: [
+          { src: '/assets/andrew-1.png', sizes: '96x96', type: 'image/png' },
+          { src: '/assets/andrew-1.png', sizes: '128x128', type: 'image/png' },
+          { src: '/assets/andrew-1.png', sizes: '192x192', type: 'image/png' },
+          { src: '/assets/andrew-1.png', sizes: '256x256', type: 'image/png' },
+          { src: '/assets/andrew-1.png', sizes: '384x384', type: 'image/png' },
+          { src: '/assets/andrew-1.png', sizes: '512x512', type: 'image/png' },
+        ]
+      });
+
+      // Set playback state
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+
+      // Set position state
+      navigator.mediaSession.setPositionState({
+        duration: duration,
+        playbackRate: 1,
+        position: currentTime
+      });
+
+      // Handle media session actions
+      navigator.mediaSession.setActionHandler('play', () => {
+        console.log('📱 [MEDIA SESSION] Play action triggered');
+        togglePlay();
+      });
+
+      navigator.mediaSession.setActionHandler('pause', () => {
+        console.log('📱 [MEDIA SESSION] Pause action triggered');
+        togglePlay();
+      });
+
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        console.log('📱 [MEDIA SESSION] Previous track action triggered');
+        handlePrevious(false);
+      });
+
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        console.log('📱 [MEDIA SESSION] Next track action triggered');
+        handleNext(false);
+      });
+
+      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+        console.log('📱 [MEDIA SESSION] Seek backward action triggered', details);
+        const audio = audioRef.current;
+        if (audio) {
+          const seekTime = Math.max(0, audio.currentTime - (details.seekOffset || 10));
+          audio.currentTime = seekTime;
+          setCurrentTime(seekTime);
+        }
+      });
+
+      navigator.mediaSession.setActionHandler('seekforward', (details) => {
+        console.log('📱 [MEDIA SESSION] Seek forward action triggered', details);
+        const audio = audioRef.current;
+        if (audio) {
+          const seekTime = Math.min(audio.duration, audio.currentTime + (details.seekOffset || 10));
+          audio.currentTime = seekTime;
+          setCurrentTime(seekTime);
+        }
+      });
+
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        console.log('📱 [MEDIA SESSION] Seek to action triggered', details);
+        const audio = audioRef.current;
+        if (audio && details.seekTime !== undefined) {
+          audio.currentTime = details.seekTime;
+          setCurrentTime(details.seekTime);
+        }
+      });
+    };
+
+    setupMediaSession();
+  }, [track.title, isPlaying, duration, currentTime]);
+
+  // Page visibility change handling for background playback
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const isVisible = !document.hidden;
+      setIsPageVisible(isVisible);
+      
+      console.log('📱 [BACKGROUND PLAYBACK] Page visibility changed:', {
+        isVisible,
+        isPlaying,
+        timestamp: new Date().toISOString()
+      });
+
+      // Don't pause audio when page becomes hidden (background playback)
+      if (!isVisible && isPlaying) {
+        console.log('📱 [BACKGROUND PLAYBACK] Page hidden but audio continues playing');
+      }
+    };
+
+    const handlePageHide = () => {
+      console.log('📱 [BACKGROUND PLAYBACK] Page hide event - audio should continue');
+    };
+
+    const handlePageShow = () => {
+      console.log('📱 [BACKGROUND PLAYBACK] Page show event - audio should continue');
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('pageshow', handlePageShow);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+  }, [isPlaying]);
+
+  // Wake Lock API for screen-off playback
+  useEffect(() => {
+    let wakeLock: WakeLockSentinel | null = null;
+
+    const requestWakeLock = async () => {
+      if (!('wakeLock' in navigator)) {
+        console.log('📱 [WAKE LOCK] Wake Lock API not supported');
+        return;
+      }
+
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        console.log('📱 [WAKE LOCK] Screen wake lock acquired');
+        
+        wakeLock.addEventListener('release', () => {
+          console.log('📱 [WAKE LOCK] Screen wake lock released');
+        });
+      } catch (err) {
+        console.log('📱 [WAKE LOCK] Failed to acquire wake lock:', err);
+      }
+    };
+
+    const releaseWakeLock = async () => {
+      if (wakeLock) {
+        await wakeLock.release();
+        wakeLock = null;
+        console.log('📱 [WAKE LOCK] Screen wake lock manually released');
+      }
+    };
+
+    // Request wake lock when audio starts playing
+    if (isPlaying) {
+      requestWakeLock();
+    } else {
+      releaseWakeLock();
+    }
+
+    // Cleanup on unmount
+    return () => {
+      releaseWakeLock();
+    };
+  }, [isPlaying]);
 
   // Centralized function to stop all audio playback
   const stopAllAudio = () => {
@@ -1419,7 +1606,8 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       <audio 
         ref={audioRef} 
         src={track.audioUrl} 
-        preload="metadata"
+        preload="auto"
+        crossOrigin="anonymous"
         playsInline
         style={{ display: 'none' }}
         onError={(e) => {
@@ -1438,6 +1626,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           ref={backgroundAudioRef} 
           src={backgroundMusic} 
           loop 
+          preload="auto"
+          crossOrigin="anonymous"
+          playsInline
           style={{ display: 'none' }}
         />
       )}
