@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect } from "react";
 import { NavigationModal } from "./NavigationModal";
+import { trackDrawerOpen, trackDrawerClose, trackNavigationClick, trackAudioShare } from "@/lib/analytics";
 
 // Import track images (using the same images as BackgroundSlideshow)
 import img1 from "@/assets/pexels-dennisariel-32880873.jpg";
@@ -54,6 +55,15 @@ export function TrackDrawer({
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPageSlug, setCurrentPageSlug] = useState("");
 
+  // Track drawer open/close events
+  useEffect(() => {
+    if (isOpen) {
+      trackDrawerOpen();
+    } else {
+      trackDrawerClose();
+    }
+  }, [isOpen]);
+
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -80,6 +90,10 @@ export function TrackDrawer({
     const trackUrl = `${window.location.origin}/track/${trackSlug}`;
     const text = `Listen to "${trackTitle}" with Andrew Cohen`;
     
+    // Track share event
+    const shareMethod = navigator.share ? 'native_share' : 'clipboard';
+    trackAudioShare(trackTitle, trackIndex, shareMethod);
+    
     if (navigator.share) {
       navigator.share({
         title: trackTitle,
@@ -103,6 +117,9 @@ export function TrackDrawer({
   ];
 
   const handleNavigationClick = (slug: string) => {
+    // Track navigation click
+    trackNavigationClick(slug);
+    
     setCurrentPageSlug(slug);
     setModalOpen(true);
   };

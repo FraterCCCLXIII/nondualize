@@ -1,8 +1,19 @@
-import { useState } from "react";
-import { X, Copy, Check, Share2, Facebook, Twitter, Instagram, MessageCircle, MessageSquare, Phone, Mail } from "lucide-react";
+import React, { useState } from "react";
+import { X, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { 
+  FaFacebook, 
+  FaTwitter, 
+  FaInstagram, 
+  FaWhatsapp, 
+  FaSignal, 
+  FaFacebookMessenger,
+  FaEnvelope,
+  FaSms
+} from "react-icons/fa";
+import { trackAudioShare, trackModalOpen, trackModalClose } from "@/lib/analytics";
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -16,17 +27,35 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
   const currentUrl = window.location.origin;
   const trackUrl = `${currentUrl}/track/${trackSlug}`;
 
+  // Track modal open/close
+  React.useEffect(() => {
+    if (isOpen) {
+      trackModalOpen('share');
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    trackModalClose('share');
+    onClose();
+  };
+
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(trackUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      
+      // Track copy event
+      trackAudioShare(trackTitle, 0, 'clipboard');
     } catch (err) {
       console.error('Failed to copy: ', err);
     }
   };
 
   const shareToSocial = (platform: string) => {
+    // Track social share event
+    trackAudioShare(trackTitle, 0, platform);
+    
     const text = `Listen to "${trackTitle}" with Andrew Cohen`;
     const encodedText = encodeURIComponent(text);
     const encodedUrl = encodeURIComponent(trackUrl);
@@ -49,7 +78,7 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg md:max-w-xl glass-morphism border-white/20">
         <DialogHeader>
           <DialogTitle className="text-white">Share "{trackTitle}"</DialogTitle>
@@ -83,14 +112,15 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
             <label className="text-sm font-medium text-white/80">Share to</label>
             <TooltipProvider>
               <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+                {/* Facebook */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       onClick={() => shareToSocial('facebook')}
                       size="sm"
-                      className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white p-0"
+                      className="w-12 h-12 rounded-full bg-[#1877F2] hover:bg-[#166FE5] text-white p-0 transition-all duration-200 hover:scale-105"
                     >
-                      <Facebook className="h-5 w-5" />
+                      <FaFacebook className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -98,14 +128,15 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
                   </TooltipContent>
                 </Tooltip>
                 
+                {/* X (Twitter) */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       onClick={() => shareToSocial('twitter')}
                       size="sm"
-                      className="w-12 h-12 rounded-full bg-gray-600 hover:bg-gray-700 text-white p-0"
+                      className="w-12 h-12 rounded-full bg-black hover:bg-gray-800 text-white p-0 transition-all duration-200 hover:scale-105"
                     >
-                      <Twitter className="h-5 w-5" />
+                      <FaTwitter className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -113,14 +144,15 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
                   </TooltipContent>
                 </Tooltip>
                 
+                {/* Instagram */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       onClick={() => shareToSocial('instagram')}
                       size="sm"
-                      className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white p-0"
+                      className="w-12 h-12 rounded-full bg-gradient-to-r from-[#E4405F] via-[#F77737] to-[#FCAF45] hover:from-[#D62976] hover:via-[#F56040] hover:to-[#FCAF45] text-white p-0 transition-all duration-200 hover:scale-105"
                     >
-                      <Instagram className="h-5 w-5" />
+                      <FaInstagram className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -128,44 +160,15 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
                   </TooltipContent>
                 </Tooltip>
                 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      onClick={() => shareToSocial('sms')}
-                      size="sm"
-                      className="w-12 h-12 rounded-full bg-green-600 hover:bg-green-700 text-white p-0"
-                    >
-                      <MessageCircle className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Share via SMS</p>
-                  </TooltipContent>
-                </Tooltip>
-                
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      onClick={() => shareToSocial('messenger')}
-                      size="sm"
-                      className="w-12 h-12 rounded-full bg-blue-500 hover:bg-blue-600 text-white p-0"
-                    >
-                      <MessageSquare className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Share on Messenger</p>
-                  </TooltipContent>
-                </Tooltip>
-                
+                {/* WhatsApp */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       onClick={() => shareToSocial('whatsapp')}
                       size="sm"
-                      className="w-12 h-12 rounded-full bg-green-500 hover:bg-green-600 text-white p-0"
+                      className="w-12 h-12 rounded-full bg-[#25D366] hover:bg-[#22C55E] text-white p-0 transition-all duration-200 hover:scale-105"
                     >
-                      <Phone className="h-5 w-5" />
+                      <FaWhatsapp className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -173,14 +176,15 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
                   </TooltipContent>
                 </Tooltip>
                 
+                {/* Signal */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       onClick={() => shareToSocial('signal')}
                       size="sm"
-                      className="w-12 h-12 rounded-full bg-purple-600 hover:bg-purple-700 text-white p-0"
+                      className="w-12 h-12 rounded-full bg-[#3A76F0] hover:bg-[#2563EB] text-white p-0 transition-all duration-200 hover:scale-105"
                     >
-                      <MessageCircle className="h-5 w-5" />
+                      <FaSignal className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -188,14 +192,47 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
                   </TooltipContent>
                 </Tooltip>
                 
+                {/* Facebook Messenger */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => shareToSocial('messenger')}
+                      size="sm"
+                      className="w-12 h-12 rounded-full bg-[#0084FF] hover:bg-[#0073E6] text-white p-0 transition-all duration-200 hover:scale-105"
+                    >
+                      <FaFacebookMessenger className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Share on Messenger</p>
+                  </TooltipContent>
+                </Tooltip>
+                
+                {/* SMS */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => shareToSocial('sms')}
+                      size="sm"
+                      className="w-12 h-12 rounded-full bg-[#10B981] hover:bg-[#059669] text-white p-0 transition-all duration-200 hover:scale-105"
+                    >
+                      <FaSms className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Share via SMS</p>
+                  </TooltipContent>
+                </Tooltip>
+                
+                {/* Email */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       onClick={() => shareToSocial('email')}
                       size="sm"
-                      className="w-12 h-12 rounded-full bg-gray-600 hover:bg-gray-700 text-white p-0"
+                      className="w-12 h-12 rounded-full bg-[#6B7280] hover:bg-[#4B5563] text-white p-0 transition-all duration-200 hover:scale-105"
                     >
-                      <Mail className="h-5 w-5" />
+                      <FaEnvelope className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>

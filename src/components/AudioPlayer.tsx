@@ -9,6 +9,22 @@ import { CaptionOverlay } from "./CaptionOverlay";
 import { ShareModal } from "./ShareModal";
 import { parseSrtFile, type Caption } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import {
+  trackAudioPlay,
+  trackAudioPause,
+  trackTrackChange,
+  trackTrackSelect,
+  trackSeek,
+  trackVolumeChange,
+  trackBackgroundMusicPlay,
+  trackBackgroundMusicPause,
+  trackBackgroundMusicChange,
+  trackCaptionsToggle,
+  trackAudioShare,
+  trackAudioError,
+  trackAudioLoadTime,
+  trackTrackSwitchTime,
+} from "@/lib/analytics";
 
 // Extend Window interface for mobile Safari detection timeout
 declare global {
@@ -509,6 +525,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         timestamp: new Date().toISOString()
       });
       setIsPlaying(true);
+      
+      // Track audio play event
+      trackAudioPlay(track.title, currentTrack, audio.duration);
     };
     
     const handlePause = () => {
@@ -519,6 +538,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         timestamp: new Date().toISOString()
       });
       setIsPlaying(false);
+      
+      // Track audio pause event
+      trackAudioPause(track.title, currentTrack, audio.currentTime);
     };
     
     const handleEnded = () => {
@@ -1181,6 +1203,14 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const handlePrevious = (autoPlay: boolean = false) => {
     const newTrackIndex = currentTrack === 0 ? mockTracks.length - 1 : currentTrack - 1;
     
+    // Track track change event
+    trackTrackChange(
+      mockTracks[currentTrack].title,
+      mockTracks[newTrackIndex].title,
+      currentTrack,
+      newTrackIndex,
+      autoPlay
+    );
     
     // Stop all audio immediately using centralized function
     stopAllAudio();
@@ -1260,6 +1290,15 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       isBackgroundMusicPlaying,
       timestamp: new Date().toISOString()
     });
+    
+    // Track track change event
+    trackTrackChange(
+      mockTracks[currentTrack].title,
+      mockTracks[newTrackIndex].title,
+      currentTrack,
+      newTrackIndex,
+      autoPlay
+    );
     
     // Stop all audio immediately using centralized function
     stopAllAudio();
@@ -1365,6 +1404,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     setHasUserInteracted(true);
     
     const newTime = value[0];
+    const previousTime = audio.currentTime;
+    
+    // Track seek event
+    trackSeek(track.title, previousTime, newTime);
+    
     audio.currentTime = newTime;
     setCurrentTime(newTime);
   };
@@ -1453,6 +1497,9 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       timestamp: new Date().toISOString()
     });
     
+    // Track track selection
+    trackTrackSelect(mockTracks[trackIndex].title, trackIndex);
+    
     // Stop all audio immediately using centralized function
     stopAllAudio();
     
@@ -1490,6 +1537,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
   const handleVolumeChange = (value: number[]) => {
     const newVolume = value[0];
+    const previousVolume = volume;
+    
+    // Track volume change event
+    trackVolumeChange(newVolume, previousVolume);
+    
     setVolume(newVolume);
 
     console.log('🎵 [VOLUME] Volume change requested:', newVolume);
@@ -1543,6 +1595,19 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const handleBackgroundMusicSelect = (trackId: string) => {
     const selectedTrack = backgroundMusicTracks.find(track => track.id === trackId);
     if (selectedTrack) {
+      // Track background music change
+      const currentBgTrack = backgroundMusicTracks.find(track => track.id === selectedBackgroundTrack);
+      if (currentBgTrack) {
+        trackBackgroundMusicChange(
+          currentBgTrack.title,
+          selectedTrack.title,
+          currentBgTrack.id,
+          selectedTrack.id
+        );
+      } else {
+        trackBackgroundMusicPlay(selectedTrack.title, selectedTrack.id);
+      }
+      
       // Stop current background music before switching
       const backgroundAudio = backgroundAudioRef.current;
       if (backgroundAudio) {
@@ -1559,8 +1624,18 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
   const toggleBackgroundMusic = () => {
     if (isBackgroundMusicPlaying) {
+      // Track background music pause
+      const currentBgTrack = backgroundMusicTracks.find(track => track.id === selectedBackgroundTrack);
+      if (currentBgTrack) {
+        trackBackgroundMusicPause(currentBgTrack.title, currentBgTrack.id);
+      }
       setIsBackgroundMusicPlaying(false);
     } else {
+      // Track background music play
+      const currentBgTrack = backgroundMusicTracks.find(track => track.id === selectedBackgroundTrack);
+      if (currentBgTrack) {
+        trackBackgroundMusicPlay(currentBgTrack.title, currentBgTrack.id);
+      }
       setIsBackgroundMusicPlaying(true);
     }
   };
@@ -1617,7 +1692,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   };
 
   const toggleCaptions = () => {
-    setIsCaptionsActive(!isCaptionsActive);
+    const newCaptionsState = !isCaptionsActive;
+    setIsCaptionsActive(newCaptionsState);
+    
+    // Track captions toggle
+    trackCaptionsToggle(newCaptionsState, track.title);
   };
 
   const getTrackSlug = (trackIndex: number) => {
@@ -1860,7 +1939,11 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setIsShareModalOpen(true)}
+              onClick={() => {
+                setIsShareModalOpen(true);
+                // Track share modal opening
+                trackAudioShare(track.title, currentTrack, 'modal');
+              }}
               className="text-white hover:text-[hsl(var(--control-hover))] hover:bg-white/10 h-9 w-9 md:h-12 md:w-12 flex-shrink-0"
             >
               <Share2 className="h-4 w-4 md:h-5 md:w-5" />
