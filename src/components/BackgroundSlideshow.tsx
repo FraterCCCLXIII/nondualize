@@ -87,6 +87,11 @@ export function BackgroundSlideshow({ trackIndex, isTransitioning = false }: Bac
       img.className = index === 0 ? 'ken-burns-image fx' : 'ken-burns-image';
     });
 
+    // Start the first image's Ken Burns effect immediately
+    if (imageElements.length > 0) {
+      imageElements[0].className = 'ken-burns-image fx';
+    }
+
     let currentIndex = 0;
     const numberOfImages = imageElements.length;
 

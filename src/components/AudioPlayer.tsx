@@ -7,6 +7,7 @@ import { TrackDrawer } from "./TrackDrawer";
 import { BackgroundSlideshow } from "./BackgroundSlideshow";
 import { CaptionOverlay } from "./CaptionOverlay";
 import { ShareModal } from "./ShareModal";
+import { WelcomeModal } from "./WelcomeModal";
 import { parseSrtFile, type Caption } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import {
@@ -241,6 +242,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const [isCaptionsActive, setIsCaptionsActive] = useState(false);
   const [captions, setCaptions] = useState<Caption[]>([]);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [mobileSafariBottomPadding, setMobileSafariBottomPadding] = useState(0);
   const [isPageVisible, setIsPageVisible] = useState(true);
@@ -263,6 +265,14 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
 
   const track = mockTracks[currentTrack];
+
+  // Show welcome modal on first load
+  useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
+    if (hasSeenWelcome !== 'true') {
+      setIsWelcomeModalOpen(true);
+    }
+  }, []);
 
   // iOS background playback setup
   const setupIOSAudioMixing = useCallback(() => {
@@ -2049,6 +2059,12 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         onClose={() => setIsShareModalOpen(false)}
         trackTitle={track.title}
         trackSlug={getTrackSlug(currentTrack)}
+      />
+
+      {/* Welcome Modal */}
+      <WelcomeModal
+        isOpen={isWelcomeModalOpen}
+        onClose={() => setIsWelcomeModalOpen(false)}
       />
     </div>
   );
