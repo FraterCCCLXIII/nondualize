@@ -234,11 +234,73 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   const backgroundGainNodeRef = useRef<GainNode | null>(null);
   const audioSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const backgroundAudioSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  
+  // iOS background playback refs
+  const iosAudioContextRef = useRef<AudioContext | null>(null);
+  const iosMixedAudioElementRef = useRef<HTMLAudioElement | null>(null);
+  const iosMediaStreamDestRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const iosVoiceGainRef = useRef<GainNode | null>(null);
+  const iosMusicGainRef = useRef<GainNode | null>(null);
+  const iosMasterGainRef = useRef<GainNode | null>(null);
+  const iosVoiceSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const iosMusicSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
 
 
   const track = mockTracks[currentTrack];
 
-
+  // iOS background playback setup
+  const setupIOSAudioMixing = useCallback(() => {
+    if (!isIOS()) return;
+    
+    try {
+      // Create iOS audio context
+      iosAudioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      
+      // Create mixed audio element for iOS
+      iosMixedAudioElementRef.current = document.createElement('audio');
+      iosMixedAudioElementRef.current.controls = false;
+      iosMixedAudioElementRef.current.preload = 'auto';
+      iosMixedAudioElementRef.current.crossOrigin = 'anonymous';
+      (iosMixedAudioElementRef.current as any).playsInline = true;
+      
+      // Create media stream destination
+      iosMediaStreamDestRef.current = iosAudioContextRef.current.createMediaStreamDestination();
+      iosMixedAudioElementRef.current.srcObject = iosMediaStreamDestRef.current.stream;
+      
+      // Create gain nodes
+      iosVoiceGainRef.current = iosAudioContextRef.current.createGain();
+      iosMusicGainRef.current = iosAudioContextRef.current.createGain();
+      iosMasterGainRef.current = iosAudioContextRef.current.createGain();
+      
+      // Connect audio sources
+      const audio = audioRef.current;
+      const backgroundAudio = backgroundAudioRef.current;
+      
+      if (audio) {
+        iosVoiceSourceRef.current = iosAudioContextRef.current!.createMediaElementSource(audio);
+        iosVoiceSourceRef.current.connect(iosVoiceGainRef.current!);
+      }
+      
+      if (backgroundAudio) {
+        iosMusicSourceRef.current = iosAudioContextRef.current!.createMediaElementSource(backgroundAudio);
+        iosMusicSourceRef.current.connect(iosMusicGainRef.current!);
+      }
+      
+      // Connect to master gain and destination
+      iosVoiceGainRef.current!.connect(iosMasterGainRef.current!);
+      iosMusicGainRef.current!.connect(iosMasterGainRef.current!);
+      iosMasterGainRef.current!.connect(iosMediaStreamDestRef.current!);
+      
+      // Set initial volumes
+      iosVoiceGainRef.current!.gain.value = volume;
+      iosMusicGainRef.current!.gain.value = backgroundMusicVolume;
+      iosMasterGainRef.current!.gain.value = 1.0;
+      
+      console.log('🍎 [iOS AUDIO] Audio mixing setup complete');
+    } catch (error) {
+      console.warn('🍎 [iOS AUDIO] Failed to setup audio mixing:', error);
+    }
+  }, [volume, backgroundMusicVolume]);
 
   // Setup Web Audio API for mobile volume control - simplified approach
   const setupWebAudioVolume = useCallback(() => {
@@ -406,8 +468,10 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     // Setup Web Audio API for volume control after user interaction
     if (hasUserInteracted) {
       setupWebAudioVolume();
+      // Setup iOS audio mixing for background playback compatibility
+      setupIOSAudioMixing();
     }
-  }, [hasUserInteracted, volume, backgroundMusicVolume, setupWebAudioVolume]);
+  }, [hasUserInteracted, volume, backgroundMusicVolume, setupWebAudioVolume, setupIOSAudioMixing]);
 
   // Consolidated audio event handling
   useEffect(() => {
@@ -655,6 +719,21 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           backgroundGainNodeRef.current = null;
         }
         
+        // iOS audio cleanup
+        if (iosMixedAudioElementRef.current) {
+          iosMixedAudioElementRef.current.remove();
+          iosMixedAudioElementRef.current = null;
+        }
+        if (iosAudioContextRef.current) {
+          iosAudioContextRef.current.close();
+          iosAudioContextRef.current = null;
+        }
+        iosMediaStreamDestRef.current = null;
+        iosVoiceGainRef.current = null;
+        iosMusicGainRef.current = null;
+        iosMasterGainRef.current = null;
+        iosVoiceSourceRef.current = null;
+        iosMusicSourceRef.current = null;
         
         console.log('🎵 [VOLUME] Web Audio nodes cleaned up');
       } catch (error) {
@@ -997,6 +1076,10 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       // Pause current audio and background music
       audio.pause();
       
+      // iOS: Pause mixed audio element
+      if (isIOS() && iosMixedAudioElementRef.current) {
+        iosMixedAudioElementRef.current.pause();
+      }
       
       setIsPlaying(false);
       
@@ -1059,6 +1142,15 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
             timestamp: new Date().toISOString()
           });
           
+          // iOS: Play mixed audio element for background playback
+          if (isIOS() && iosMixedAudioElementRef.current) {
+            try {
+              await iosMixedAudioElementRef.current.play();
+              console.log('🍎 [iOS AUDIO] Mixed audio element playing');
+            } catch (error) {
+              console.warn('🍎 [iOS AUDIO] Failed to play mixed audio element:', error);
+            }
+          }
           
           // Background music activation is handled by the auto-activation useEffect
           // No need to call activateDefaultBackgroundMusic here as it causes duplicate calls

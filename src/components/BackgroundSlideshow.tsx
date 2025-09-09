@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // Import all available images
 import img1 from "@/assets/pexels-dennisariel-32880873.jpg";
@@ -63,59 +63,70 @@ interface BackgroundSlideshowProps {
 
 export function BackgroundSlideshow({ trackIndex, isTransitioning = false }: BackgroundSlideshowProps) {
   const [currentImages, setCurrentImages] = useState<string[]>([]);
-  const [previousImages, setPreviousImages] = useState<string[]>([]);
-  const [showPrevious, setShowPrevious] = useState(false);
+  const slideshowRef = useRef<HTMLDivElement>(null);
 
   // Get the image set for the current track
   const images = trackImageSets[trackIndex] || trackImageSets[0];
 
   useEffect(() => {
-    if (JSON.stringify(images) !== JSON.stringify(currentImages)) {
-      // Store previous images for smooth transition
-      setPreviousImages(currentImages);
-      setShowPrevious(true);
+    setCurrentImages(images);
+  }, [trackIndex, images]);
+
+  // Ken Burns effect with smooth transitions
+  useEffect(() => {
+    if (currentImages.length === 0) return;
+
+    const slideshow = slideshowRef.current;
+    if (!slideshow) return;
+
+    const imageElements = slideshow.querySelectorAll('img');
+    if (imageElements.length === 0) return;
+
+    // Set the first image as active when component mounts or images change
+    imageElements.forEach((img, index) => {
+      img.className = index === 0 ? 'ken-burns-image fx' : 'ken-burns-image';
+    });
+
+    let currentIndex = 0;
+    const numberOfImages = imageElements.length;
+
+    const kenBurns = () => {
+      if (numberOfImages === 0) return;
       
-      // Set new images
-      setCurrentImages(images);
+      // Move to next image
+      currentIndex = (currentIndex + 1) % numberOfImages;
       
-      // Hide previous images after transition
-      const timer = setTimeout(() => {
-        setShowPrevious(false);
-        setPreviousImages([]);
-      }, 500);
+      // Set current image as active
+      imageElements[currentIndex].className = 'ken-burns-image fx';
       
-      return () => clearTimeout(timer);
-    }
-  }, [trackIndex, images, currentImages]);
+      // Clean up the image that's no longer needed (2 images back)
+      if (currentIndex === 0) { 
+        imageElements[numberOfImages - 2].className = 'ken-burns-image';
+      } else if (currentIndex === 1) { 
+        imageElements[numberOfImages - 1].className = 'ken-burns-image';
+      } else if (currentIndex > 1) { 
+        imageElements[currentIndex - 2].className = 'ken-burns-image';
+      }
+    };
+
+    // Start the Ken Burns effect
+    const interval = setInterval(kenBurns, 6000); // 6 seconds per image
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [currentImages]);
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {/* Previous Images (fading out) */}
-      {showPrevious && previousImages.length > 0 && (
-        <div className="fling-minislide transition-opacity duration-500 opacity-0">
-          {previousImages.map((image, index) => (
-            <img
-              key={`prev-${index}`}
-              src={image}
-              alt={`Previous Background ${index + 1}`}
-              style={{
-                animationDelay: `${index * 12}s`,
-              }}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Current Images (fading in) */}
-      <div className={`fling-minislide transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+      {/* Ken Burns Slideshow Container */}
+      <div ref={slideshowRef} className="ken-burns-slideshow">
         {currentImages.map((image, index) => (
           <img
             key={`${trackIndex}-${index}`}
             src={image}
             alt={`Background ${index + 1}`}
-            style={{
-              animationDelay: `${index * 12}s`,
-            }}
+            className="ken-burns-image"
           />
         ))}
       </div>

@@ -132,8 +132,11 @@ export function TrackDrawer({
             {/* Header - Fixed */}
             <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10 flex-shrink-0">
               <div className="flex flex-col">
-                <span className="text-sm font-light text-white/80">Awakening with</span>
-                <h2 className="text-xl font-semibold text-white">Andrew Cohen</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-white font-sans">Nondualize</h2>
+                  <span className="text-[10px] font-medium text-white/60 bg-white/10 px-1.5 py-0.5 rounded">BETA</span>
+                </div>
+                <p className="text-xs text-white/70 mt-1 font-light">The Integral Nondual Teachings of Andrew Cohen</p>
               </div>
               <Button
                 variant="ghost"

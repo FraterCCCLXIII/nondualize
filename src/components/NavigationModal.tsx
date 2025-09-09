@@ -215,7 +215,7 @@ export function NavigationModal({ isOpen, onClose, pageSlug }: NavigationModalPr
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-white/10">
             <div className="flex flex-col">
-              <h1 className="text-3xl font-light text-white font-cinzel">{pageContent.title}</h1>
+              <h1 className="text-3xl font-light text-white font-sans">{pageContent.title}</h1>
               <span className="text-lg text-white/80">{pageContent.subtitle}</span>
             </div>
             <Button

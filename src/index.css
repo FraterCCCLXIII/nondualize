@@ -282,74 +282,60 @@ All colors MUST be HSL.
     transition: opacity 2s ease-in-out, transform 2s ease-in-out;
   }
 
-  /* CSS Animated Slideshow */
-  .fling-minislide {
-    display: block;
+  /* Ken Burns Slideshow with CSS Transitions */
+  .ken-burns-slideshow {
+    position: relative;
     width: 100vw;
     height: 100vh; /* Fallback for older browsers */
     height: 100dvh; /* Dynamic viewport height for modern browsers */
     overflow: hidden;
-    position: absolute;
-    top: 0;
-    left: 0;
     background-color: transparent;
-    /* Ensure smooth rendering */
-    will-change: opacity;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
   }
 
-  .fling-minislide img {
+  .ken-burns-image {
     position: absolute;
-    animation: ken-burns-slideshow 48s infinite ease-out;
-    opacity: 0;
-    object-fit: cover;
     width: 100vw;
     height: 100vh; /* Fallback for older browsers */
     height: 100dvh; /* Dynamic viewport height for modern browsers */
-    transform: scale(1.1); /* Start slightly zoomed to prevent shrinking effect */
-    /* Performance optimizations */
-    will-change: transform, opacity;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    transform-style: preserve-3d;
-    -webkit-transform-style: preserve-3d;
-    /* Smooth transitions */
-    transition: none; /* Let animation handle all transitions */
+    top: 50%;
+    left: 50%;
+    margin-left: -50vw;
+    margin-top: -50vh;
+    opacity: 0;
+    object-fit: cover;
+    transform: scale(1);
+    /* Different transform origins for varied movement */
+    transform-origin: bottom left;
+    /* Smooth transitions - different durations for opacity and transform */
+    transition-property: opacity, transform;
+    transition-duration: 3s, 10s;
+    transition-timing-function: ease-in-out, ease-out;
   }
 
-  @keyframes ken-burns-slideshow {
-    0% { 
-      opacity: 0; 
-      transform: scale(1.1) translateY(0);
-      transform-origin: 50% 84%;
-    }
-    2% { 
-      opacity: 1; 
-      transform: scale(1.1) translateY(0);
-      transform-origin: 50% 84%;
-    }
-    23% { 
-      opacity: 1; 
-      transform: scale(1.35) translateY(8px);
-      transform-origin: center;
-    }
-    25% { 
-      opacity: 0; 
-      transform: scale(1.35) translateY(8px);
-      transform-origin: center;
-    }
-    100% { 
-      opacity: 0; 
-      transform: scale(1.35) translateY(8px);
-      transform-origin: center;
-    }
+  /* Varied transform origins for different movement patterns */
+  .ken-burns-image:nth-child(2n+1) {
+    transform-origin: top right;
   }
 
-  .fling-minislide img:nth-child(4) { animation-delay: 0s; }
-  .fling-minislide img:nth-child(3) { animation-delay: 12s; }
-  .fling-minislide img:nth-child(2) { animation-delay: 24s; }
-  .fling-minislide img:nth-child(1) { animation-delay: 36s; }
+  .ken-burns-image:nth-child(3n+1) {
+    transform-origin: top left;
+  }
+
+  .ken-burns-image:nth-child(4n+1) {
+    transform-origin: bottom right;
+  }
+
+  /* Z-index management for proper layering */
+  .ken-burns-image.fx:first-child + .ken-burns-image ~ .ken-burns-image {
+    z-index: -1;
+  }
+
+  /* Active image with Ken Burns effect */
+  .ken-burns-image.fx {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
 
   /* Custom scrollbar styling */
   .custom-scrollbar::-webkit-scrollbar {
