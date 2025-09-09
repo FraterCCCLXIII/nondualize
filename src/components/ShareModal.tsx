@@ -43,7 +43,7 @@ const XIcon = ({ className }: { className?: string }) => (
     <g clipPath="url(#clip0_12173_19470)">
       <path 
         d="M237.1 0H283.1L182.1 115L300.1 271H207.5L135 176.2L52 271H6L113 148L0 0H94.9L160.4 86.6L237.1 0ZM221 244H246.5L81.5 26H54.1L221 244Z" 
-        fill="currentColor"
+        fill="black"
       />
     </g>
     <defs>
@@ -173,7 +173,7 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
                     <Button
                       onClick={() => shareToSocial('twitter')}
                       size="sm"
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black hover:bg-gray-800 text-white p-0 transition-all duration-200 hover:scale-105"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-gray-100 text-black p-0 transition-all duration-200 hover:scale-105"
                     >
                       <XIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
