@@ -66,14 +66,12 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
                 readOnly
                 className="w-full px-3 py-2 pr-12 bg-white/10 border border-white/20 rounded-md text-white text-sm"
               />
-              <Button
+              <button
                 onClick={copyToClipboard}
-                variant="outline"
-                size="sm"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 bg-white/10 border border-white/20 text-white hover:bg-white/20 rounded-md flex items-center justify-center"
               >
                 {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-              </Button>
+              </button>
             </div>
             {copied && (
               <p className="text-sm text-green-400">Copied!</p>

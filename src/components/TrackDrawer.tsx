@@ -54,9 +54,6 @@ export function TrackDrawer({
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPageSlug, setCurrentPageSlug] = useState("");
 
-  // Debug: Log when component receives props
-  useEffect(() => {
-  }, [isOpen, currentTrack, isPlaying, onTrackSelect]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

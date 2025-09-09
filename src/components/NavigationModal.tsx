@@ -1,7 +1,6 @@
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 
 interface NavigationModalProps {
   isOpen: boolean;
@@ -170,8 +169,6 @@ const pageContents: Record<string, PageContent> = {
 export function NavigationModal({ isOpen, onClose, pageSlug }: NavigationModalProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
   
   const pageContent = pageContents[pageSlug];
 
@@ -193,21 +190,7 @@ export function NavigationModal({ isOpen, onClose, pageSlug }: NavigationModalPr
     }
   }, [isOpen]);
 
-  // Separate effect for URL navigation to avoid interfering with animation
-  useEffect(() => {
-    if (isOpen && pageSlug && pageSlug !== '') {
-      // Update URL when modal opens
-      navigate(`/${pageSlug}`, { replace: true });
-    }
-  }, [isOpen, pageSlug, navigate]);
-
-  // Separate effect for URL restoration when closing
-  useEffect(() => {
-    if (!isOpen && location.pathname !== '/' && !location.pathname.includes('/track/')) {
-      // Restore previous URL when modal closes
-      navigate('/', { replace: true });
-    }
-  }, [isOpen, location.pathname, navigate]);
+  // Note: Removed automatic URL navigation as these are modal overlays, not separate pages
 
   if (!shouldRender) return null;
   if (!pageContent) return null;

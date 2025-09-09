@@ -352,6 +352,21 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
     }
   }, []); // Run once on mount
 
+  // Hide horizontal scrollbar for controls
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .flex.items-center.gap-1.md\\:gap-2.flex-nowrap.overflow-x-auto::-webkit-scrollbar {
+        display: none;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // Simplified mobile audio initialization
   useEffect(() => {
     const initMobileAudio = () => {
@@ -1636,7 +1651,13 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-1 md:gap-2 flex-nowrap overflow-x-auto">
+          <div 
+            className="flex items-center gap-1 md:gap-2 flex-nowrap overflow-x-auto"
+            style={{
+              scrollbarWidth: 'none', /* Firefox */
+              msOverflowStyle: 'none', /* Internet Explorer 10+ */
+            }}
+          >
             <Button
               variant="ghost"
               size="icon"
