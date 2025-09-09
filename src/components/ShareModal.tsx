@@ -93,11 +93,11 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
                 type="text"
                 value={trackUrl}
                 readOnly
-                className="w-full px-3 py-2 pr-12 bg-white/10 border border-white/20 rounded-md text-white text-sm"
+                className="w-full px-3 py-2 pr-8 bg-white/10 border border-white/20 rounded-md text-white text-sm"
               />
               <button
                 onClick={copyToClipboard}
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 bg-white/10 border border-white/20 text-white hover:bg-white/20 rounded-md flex items-center justify-center"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0 bg-white/10 border border-white/20 text-white hover:bg-white/20 rounded flex items-center justify-center"
               >
                 {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
               </button>
@@ -111,16 +111,16 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
           <div className="space-y-3">
             <label className="text-sm font-medium text-white/80">Share to</label>
             <TooltipProvider>
-              <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+              <div className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4">
                 {/* Facebook */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       onClick={() => shareToSocial('facebook')}
                       size="sm"
-                      className="w-12 h-12 rounded-full bg-[#1877F2] hover:bg-[#166FE5] text-white p-0 transition-all duration-200 hover:scale-105"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#1877F2] hover:bg-[#166FE5] text-white p-0 transition-all duration-200 hover:scale-105"
                     >
-                      <FaFacebook className="h-5 w-5" />
+                      <FaFacebook className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -134,9 +134,9 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
                     <Button
                       onClick={() => shareToSocial('twitter')}
                       size="sm"
-                      className="w-12 h-12 rounded-full bg-black hover:bg-gray-800 text-white p-0 transition-all duration-200 hover:scale-105"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black hover:bg-gray-800 text-white p-0 transition-all duration-200 hover:scale-105"
                     >
-                      <FaTwitter className="h-5 w-5" />
+                      <FaTwitter className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -150,9 +150,9 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
                     <Button
                       onClick={() => shareToSocial('instagram')}
                       size="sm"
-                      className="w-12 h-12 rounded-full bg-gradient-to-r from-[#E4405F] via-[#F77737] to-[#FCAF45] hover:from-[#D62976] hover:via-[#F56040] hover:to-[#FCAF45] text-white p-0 transition-all duration-200 hover:scale-105"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r from-[#E4405F] via-[#F77737] to-[#FCAF45] hover:from-[#D62976] hover:via-[#F56040] hover:to-[#FCAF45] text-white p-0 transition-all duration-200 hover:scale-105"
                     >
-                      <FaInstagram className="h-5 w-5" />
+                      <FaInstagram className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -166,9 +166,9 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
                     <Button
                       onClick={() => shareToSocial('whatsapp')}
                       size="sm"
-                      className="w-12 h-12 rounded-full bg-[#25D366] hover:bg-[#22C55E] text-white p-0 transition-all duration-200 hover:scale-105"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#25D366] hover:bg-[#22C55E] text-white p-0 transition-all duration-200 hover:scale-105"
                     >
-                      <FaWhatsapp className="h-5 w-5" />
+                      <FaWhatsapp className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -182,9 +182,9 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
                     <Button
                       onClick={() => shareToSocial('signal')}
                       size="sm"
-                      className="w-12 h-12 rounded-full bg-[#3A76F0] hover:bg-[#2563EB] text-white p-0 transition-all duration-200 hover:scale-105"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#3A76F0] hover:bg-[#2563EB] text-white p-0 transition-all duration-200 hover:scale-105"
                     >
-                      <FaSignal className="h-5 w-5" />
+                      <FaSignal className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -198,9 +198,9 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
                     <Button
                       onClick={() => shareToSocial('messenger')}
                       size="sm"
-                      className="w-12 h-12 rounded-full bg-[#0084FF] hover:bg-[#0073E6] text-white p-0 transition-all duration-200 hover:scale-105"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#0084FF] hover:bg-[#0073E6] text-white p-0 transition-all duration-200 hover:scale-105"
                     >
-                      <FaFacebookMessenger className="h-5 w-5" />
+                      <FaFacebookMessenger className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -214,9 +214,9 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
                     <Button
                       onClick={() => shareToSocial('sms')}
                       size="sm"
-                      className="w-12 h-12 rounded-full bg-[#10B981] hover:bg-[#059669] text-white p-0 transition-all duration-200 hover:scale-105"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#10B981] hover:bg-[#059669] text-white p-0 transition-all duration-200 hover:scale-105"
                     >
-                      <FaSms className="h-5 w-5" />
+                      <FaSms className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -230,9 +230,9 @@ export function ShareModal({ isOpen, onClose, trackTitle, trackSlug }: ShareModa
                     <Button
                       onClick={() => shareToSocial('email')}
                       size="sm"
-                      className="w-12 h-12 rounded-full bg-[#6B7280] hover:bg-[#4B5563] text-white p-0 transition-all duration-200 hover:scale-105"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#6B7280] hover:bg-[#4B5563] text-white p-0 transition-all duration-200 hover:scale-105"
                     >
-                      <FaEnvelope className="h-5 w-5" />
+                      <FaEnvelope className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
