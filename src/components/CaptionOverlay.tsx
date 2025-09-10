@@ -65,7 +65,7 @@ export function CaptionOverlay({ isActive, currentTime, captions }: CaptionOverl
   return (
     <div className="absolute inset-0 z-20 pointer-events-none">
       {/* Caption container positioned to avoid sticky playbar */}
-      <div className="absolute inset-x-0 top-0 bottom-40 md:bottom-32 flex items-center justify-center">
+      <div className="absolute inset-x-0 top-0 bottom-20 md:bottom-16 flex items-center justify-center">
         <div
           className={`max-w-4xl mx-4 transition-opacity duration-300 ${
             isVisible && !isFadingOut ? "opacity-100" : "opacity-0"

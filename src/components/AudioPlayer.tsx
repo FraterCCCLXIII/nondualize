@@ -1730,7 +1730,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   };
 
   return (
-    <div className="relative h-screen w-full overflow-hidden pb-32 md:pb-40">
+    <div className="relative h-screen w-full overflow-hidden pb-4">
       {/* Background Slideshow */}
       <BackgroundSlideshow trackIndex={currentTrack} isTransitioning={isTransitioning} />
 
