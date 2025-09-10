@@ -98,18 +98,18 @@ interface Track {
 const mockTracks: Track[] = [
   {
     id: "1",
-    title: "What is Ego Death?",
-    description: "Exploring the profound dissolution of the separate self and the awakening to true consciousness",
-    duration: 3900, // ~65 minutes
-    audioUrl: "/audio/What is Ego Death.m4a",
-    defaultBackgroundMusic: "bg1" // Expansion
-  },
-  {
-    id: "2", 
     title: "What is Non-Duality?",
     description: "Understanding the fundamental unity of existence beyond the illusion of separation",
     duration: 4140, // ~69 minutes
     audioUrl: "/audio/What is Nonduality.m4a",
+    defaultBackgroundMusic: "bg1" // Expansion
+  },
+  {
+    id: "2",
+    title: "What is Ego Death?",
+    description: "Exploring the profound dissolution of the separate self and the awakening to true consciousness",
+    duration: 3900, // ~65 minutes
+    audioUrl: "/audio/What is Ego Death.m4a",
     defaultBackgroundMusic: "bg2" // Aura
   },
   {
@@ -122,43 +122,43 @@ const mockTracks: Track[] = [
   },
   {
     id: "4",
-    title: "Realisation and Transformation",
-    description: "The journey from intellectual understanding to embodied awakening and lasting change",
-    duration: 5640, // ~94 minutes
-    audioUrl: "/audio/Realization and Transformation.m4a",
-    defaultBackgroundMusic: "bg4" // Resonance
-  },
-  {
-    id: "5",
-    title: "The Evolution of Nonduality",
-    description: "How the understanding of oneness evolves and deepens through practice and insight",
-    duration: 5880, // ~98 minutes
-    audioUrl: "/audio/The Evolution of Nonduality.m4a",
-    defaultBackgroundMusic: "bg5" // Transcendence
-  },
-  {
-    id: "6",
-    title: "The Edge of Evolution",
-    description: "Exploring the cutting edge of human consciousness and spiritual development",
-    duration: 4080, // ~68 minutes
-    audioUrl: "/audio/The Edge of Evolution.m4a",
-    defaultBackgroundMusic: "bg6" // Luminescence
-  },
-  {
-    id: "7",
-    title: "Realigning the Soul",
-    description: "The process of aligning our deepest essence with the highest truth and purpose",
-    duration: 4680, // ~78 minutes
-    audioUrl: "/audio/Realigning the Soul.m4a",
-    defaultBackgroundMusic: "bg7" // Expansion
-  },
-  {
-    id: "8",
     title: "Rational Idealism",
     description: "Bridging the gap between intellectual understanding and spiritual realization",
     duration: 3420, // ~57 minutes
     audioUrl: "/audio/Rational Idealism.m4a",
-    defaultBackgroundMusic: "bg8" // Aura
+    defaultBackgroundMusic: "bg4" // Resonance
+  },
+  {
+    id: "5",
+    title: "Realisation and Transformation",
+    description: "The journey from intellectual understanding to embodied awakening and lasting change",
+    duration: 5640, // ~94 minutes
+    audioUrl: "/audio/Realization and Transformation.m4a",
+    defaultBackgroundMusic: "bg5" // Transcendence
+  },
+  {
+    id: "6",
+    title: "Realigning the Soul",
+    description: "The process of aligning our deepest essence with the highest truth and purpose",
+    duration: 4680, // ~78 minutes
+    audioUrl: "/audio/Realigning the Soul.m4a",
+    defaultBackgroundMusic: "bg6" // Luminescence
+  },
+  {
+    id: "7",
+    title: "The Evolution of Nonduality",
+    description: "How the understanding of oneness evolves and deepens through practice and insight",
+    duration: 5880, // ~98 minutes
+    audioUrl: "/audio/The Evolution of Nonduality.m4a",
+    defaultBackgroundMusic: "bg7" // Essence
+  },
+  {
+    id: "8",
+    title: "The Edge of Evolution",
+    description: "Exploring the cutting edge of human consciousness and spiritual development",
+    duration: 4080, // ~68 minutes
+    audioUrl: "/audio/The Edge of Evolution.m4a",
+    defaultBackgroundMusic: "bg8" // Awakening
   }
 ];
 

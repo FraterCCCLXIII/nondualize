@@ -18,14 +18,14 @@ import img8 from "@/assets/pexels-sliceisop-2873669.jpg";
 
 // Track image mapping (first image from each track's set)
 const trackImages = [
-  img1,  // Track 1: "What is Ego Death?"
-  img2,  // Track 2: "What is Non-Duality?"
+  img2,  // Track 1: "What is Non-Duality?"
+  img1,  // Track 2: "What is Ego Death?"
   img5,  // Track 3: "The Four Selves"
-  img6,  // Track 4: "Realisation and Transformation"
-  img7,  // Track 5: "The Evolution of Nonduality"
-  img8,  // Track 6: "The Edge of Evolution"
-  img3,  // Track 7: "Realigning the Soul"
-  img4   // Track 8: "Rational Idealism"
+  img4,  // Track 4: "Rational Idealism"
+  img6,  // Track 5: "Realisation and Transformation"
+  img3,  // Track 6: "Realigning the Soul"
+  img7,  // Track 7: "The Evolution of Nonduality"
+  img8   // Track 8: "The Edge of Evolution"
 ];
 
 interface Track {

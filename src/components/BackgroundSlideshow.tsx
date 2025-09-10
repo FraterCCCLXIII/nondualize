@@ -31,29 +31,29 @@ import img27 from "@/assets/pexels-david-paul-2150063702-33313322.jpg";
 
 // Define themed image sets for each track
 const trackImageSets = [
-  // Track 1: "What is Ego Death?" - Dark, cosmic, transformative images
-  [img1, img3, img9, img15, img25, img26, img27, img13],
-  
-  // Track 2: "What is Non-Duality?" - Unity, oneness, cosmic harmony
+  // Track 1: "What is Non-Duality?" - Unity, oneness, cosmic harmony
   [img2, img4, img10, img16, img17, img24, img22, img23],
+  
+  // Track 2: "What is Ego Death?" - Dark, cosmic, transformative images
+  [img1, img3, img9, img15, img25, img26, img27, img13],
   
   // Track 3: "The Four Selves with Andrew Cohen" - Layers, depth, transformation
   [img5, img6, img7, img8, img11, img12, img14, img18],
   
-  // Track 4: "Realisation and Transformation" - Awakening, light, breakthrough
+  // Track 4: "Rational Idealism" - Balance of mind and spirit
+  [img9, img15, img25, img26, img27, img13, img2, img4],
+  
+  // Track 5: "Realisation and Transformation" - Awakening, light, breakthrough
   [img19, img20, img21, img1, img3, img9, img15, img25],
   
-  // Track 5: "The Evolution of Nonduality" - Evolution, growth, cosmic development
-  [img26, img27, img13, img2, img4, img10, img16, img17],
-  
-  // Track 6: "The Edge of Evolution" - Cutting edge, advanced consciousness
-  [img24, img22, img23, img5, img6, img7, img8, img11],
-  
-  // Track 7: "Realigning the Soul" - Alignment, harmony, soul connection
+  // Track 6: "Realigning the Soul" - Alignment, harmony, soul connection
   [img12, img14, img18, img19, img20, img21, img1, img3],
   
-  // Track 8: "Rational Idealism" - Balance of mind and spirit
-  [img9, img15, img25, img26, img27, img13, img2, img4]
+  // Track 7: "The Evolution of Nonduality" - Evolution, growth, cosmic development
+  [img26, img27, img13, img2, img4, img10, img16, img17],
+  
+  // Track 8: "The Edge of Evolution" - Cutting edge, advanced consciousness
+  [img24, img22, img23, img5, img6, img7, img8, img11]
 ];
 
 interface BackgroundSlideshowProps {

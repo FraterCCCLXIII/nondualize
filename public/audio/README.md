@@ -4,14 +4,14 @@ This directory contains audio files for the meditation/zen app.
 
 ## Current Track List
 
-1. **What is Ego Death?** - Exploring the profound dissolution of the separate self
-2. **What is Non-Duality?** - Understanding the fundamental unity of existence
+1. **What is Non-Duality?** - Understanding the fundamental unity of existence
+2. **What is Ego Death?** - Exploring the profound dissolution of the separate self
 3. **The Four Selves with Andrew Cohen** - Deep exploration of different levels of self
-4. **Realisation and Transformation** - Journey from intellectual understanding to embodied awakening
-5. **The Evolution of Nonduality** - How the understanding of oneness evolves and deepens
-6. **The Edge of Evolution** - Exploring the cutting edge of human consciousness
-7. **Realigning the Soul** - Aligning our deepest essence with the highest truth
-8. **Rational Idealism** - Bridging intellectual understanding and spiritual realization
+4. **Rational Idealism** - Bridging intellectual understanding and spiritual realization
+5. **Realisation and Transformation** - Journey from intellectual understanding to embodied awakening
+6. **Realigning the Soul** - Aligning our deepest essence with the highest truth
+7. **The Evolution of Nonduality** - How the understanding of oneness evolves and deepens
+8. **The Edge of Evolution** - Exploring the cutting edge of human consciousness
 
 ## File Structure
 
