@@ -388,11 +388,18 @@ All colors MUST be HSL.
     z-index: 50;
   }
 
+  /* Fix mobile gap above images */
+  .relative.h-screen {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+
   /* Mobile-specific fixes for Ken Burns slideshow */
   .ken-burns-slideshow {
     height: 100vh !important;
     min-height: 100vh !important;
     height: calc(100vh - env(safe-area-inset-bottom, 0px)) !important;
+    top: 0 !important;
   }
 
   .ken-burns-image {
@@ -403,17 +410,37 @@ All colors MUST be HSL.
     margin-top: calc(-50vh + env(safe-area-inset-bottom, 0px) / 2) !important;
     object-fit: cover !important;
     object-position: center !important;
+    top: 0 !important;
   }
 
   /* Additional mobile Safari fixes */
   @supports (-webkit-touch-callout: none) {
     .ken-burns-slideshow {
       height: -webkit-fill-available !important;
+      top: 0 !important;
     }
     
     .ken-burns-image {
       height: -webkit-fill-available !important;
       margin-top: calc(-50% + env(safe-area-inset-bottom, 0px) / 2) !important;
+      top: 0 !important;
     }
+  }
+
+  /* Ensure images fill from top on mobile */
+  .ken-burns-slideshow {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+  }
+
+  .ken-burns-image {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
   }
 }
