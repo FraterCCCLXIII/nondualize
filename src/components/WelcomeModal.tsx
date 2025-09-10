@@ -49,7 +49,7 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
               <h1 className="text-2xl font-bold text-white font-sans">Nondualize</h1>
               <span className="text-xs font-medium text-white/60 bg-white/10 px-1.5 py-0.5 rounded">BETA</span>
             </div>
-            <p className="text-sm text-white/70 mt-1 font-light">The Integral Nondual Teachings of Andrew Cohen</p>
+            <p className="text-sm text-white/70 mt-1 font-light">Integral Nonduality for an Evolving World</p>
           </div>
         </DialogHeader>
         

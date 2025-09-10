@@ -10,7 +10,7 @@ const Header = () => {
             <h1 className="text-xl md:text-4xl font-bold text-white font-sans">Nondualize</h1>
             <span className="text-[10px] md:text-xs font-medium text-white/60 bg-white/10 px-1.5 py-0.5 rounded">BETA</span>
           </div>
-          <p className="text-xs md:text-sm text-white/70 mt-1 font-light">The Integral Nondual Teachings of Andrew Cohen</p>
+          <p className="text-xs md:text-sm text-white/70 mt-1 font-light">Integral Nonduality for an Evolving World</p>
         </div>
       </div>
     </header>

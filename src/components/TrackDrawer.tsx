@@ -160,7 +160,7 @@ export function TrackDrawer({
                   <h2 className="text-xl font-bold text-white font-sans">Nondualize</h2>
                   <span className="text-[10px] font-medium text-white/60 bg-white/10 px-1.5 py-0.5 rounded">BETA</span>
                 </div>
-                <p className="text-xs text-white/70 mt-1 font-light">The Integral Nondual Teachings of Andrew Cohen</p>
+                <p className="text-xs text-white/70 mt-1 font-light">Integral Nonduality for an Evolving World</p>
               </div>
               <Button
                 variant="ghost"
