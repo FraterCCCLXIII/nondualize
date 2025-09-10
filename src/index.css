@@ -288,6 +288,7 @@ All colors MUST be HSL.
     width: 100vw;
     height: 100vh; /* Fallback for older browsers */
     height: 100dvh; /* Dynamic viewport height for modern browsers */
+    height: 100svh; /* Small viewport height for mobile browsers */
     overflow: hidden;
     background-color: transparent;
   }
@@ -297,10 +298,13 @@ All colors MUST be HSL.
     width: 100vw;
     height: 100vh; /* Fallback for older browsers */
     height: 100dvh; /* Dynamic viewport height for modern browsers */
+    height: 100svh; /* Small viewport height for mobile browsers */
     top: 50%;
     left: 50%;
     margin-left: -50vw;
     margin-top: -50vh;
+    margin-top: -50dvh; /* Dynamic viewport height for modern browsers */
+    margin-top: -50svh; /* Small viewport height for mobile browsers */
     opacity: 0;
     object-fit: cover;
     transform: scale(1);
@@ -382,5 +386,34 @@ All colors MUST be HSL.
     left: 0;
     right: 0;
     z-index: 50;
+  }
+
+  /* Mobile-specific fixes for Ken Burns slideshow */
+  .ken-burns-slideshow {
+    height: 100vh !important;
+    min-height: 100vh !important;
+    height: calc(100vh - env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .ken-burns-image {
+    height: 100vh !important;
+    min-height: 100vh !important;
+    height: calc(100vh - env(safe-area-inset-bottom, 0px)) !important;
+    margin-top: -50vh !important;
+    margin-top: calc(-50vh + env(safe-area-inset-bottom, 0px) / 2) !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
+
+  /* Additional mobile Safari fixes */
+  @supports (-webkit-touch-callout: none) {
+    .ken-burns-slideshow {
+      height: -webkit-fill-available !important;
+    }
+    
+    .ken-burns-image {
+      height: -webkit-fill-available !important;
+      margin-top: calc(-50% + env(safe-area-inset-bottom, 0px) / 2) !important;
+    }
   }
 }

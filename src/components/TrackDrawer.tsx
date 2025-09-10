@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect } from "react";
 import { NavigationModal } from "./NavigationModal";
+import { ContactModal } from "./ContactModal";
 import { trackDrawerOpen, trackDrawerClose, trackNavigationClick, trackAudioShare } from "@/lib/analytics";
 
 // Import track images (using the same images as BackgroundSlideshow)
@@ -54,6 +55,7 @@ export function TrackDrawer({
 }: TrackDrawerProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPageSlug, setCurrentPageSlug] = useState("");
+  const [contactModalOpen, setContactModalOpen] = useState(false);
 
   // Track drawer open/close events
   useEffect(() => {
@@ -114,14 +116,19 @@ export function TrackDrawer({
     { name: "Books", slug: "books" },
     { name: "Archive", slug: "archive" },
     { name: "Engage", slug: "engage" },
+    { name: "Contact", slug: "contact" },
   ];
 
   const handleNavigationClick = (slug: string) => {
     // Track navigation click
     trackNavigationClick(slug);
     
-    setCurrentPageSlug(slug);
-    setModalOpen(true);
+    if (slug === "contact") {
+      setContactModalOpen(true);
+    } else {
+      setCurrentPageSlug(slug);
+      setModalOpen(true);
+    }
   };
 
   return (
@@ -259,6 +266,12 @@ export function TrackDrawer({
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         pageSlug={currentPageSlug}
+      />
+
+      {/* Contact Modal */}
+      <ContactModal
+        isOpen={contactModalOpen}
+        onClose={() => setContactModalOpen(false)}
       />
     </>
   );
