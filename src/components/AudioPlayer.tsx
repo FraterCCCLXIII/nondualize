@@ -1798,7 +1798,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
 
       {/* Player Controls - Sticky Bottom Bar */}
       <div 
-        className="fixed bottom-0 left-0 right-0 p-2 md:p-6 pb-safe-mobile md:pb-6 z-50"
+        className="fixed bottom-0 left-0 right-0 p-2 md:p-6 pb-safe-mobile md:pb-6 z-20"
         style={{
           paddingBottom: typeof window !== 'undefined' && window.innerWidth <= 768 && mobileSafariBottomPadding > 0 
             ? `${mobileSafariBottomPadding}px` 
