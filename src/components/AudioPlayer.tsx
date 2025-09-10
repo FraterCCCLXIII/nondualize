@@ -791,14 +791,14 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
       try {
         // Map track indices to actual SRT file names
         const srtFileMap = [
-          "Transcript-What-is-Ego-Death-mp3.srt",
-          "Transcript-What-is-Nonduality-mp3.srt", 
-          "Transcript-The-Four-Selves-mp3.srt",
-          "Transcript-Realization-and-Transformation-mp3.srt",
-          "Transcript-The-Evolution-of-Nonduality-mp3.srt",
-          "Transcript-The-Edge-of-Evolution-mp3.srt",
-          "Transcript-Realigning-the-Soul-mp3.srt",
-          "Transcript-Rational-Idealism-mp3.srt"
+          "Transcript-What-is-Nonduality-mp3.srt",        // Track 1: "What is Non-Duality?"
+          "Transcript-What-is-Ego-Death-mp3.srt",         // Track 2: "What is Ego Death?"
+          "Transcript-The-Four-Selves-mp3.srt",           // Track 3: "The Four Selves"
+          "Transcript-Rational-Idealism-mp3.srt",         // Track 4: "Rational Idealism"
+          "Transcript-Realization-and-Transformation-mp3.srt", // Track 5: "Realisation and Transformation"
+          "Transcript-Realigning-the-Soul-mp3.srt",       // Track 6: "Realigning the Soul"
+          "Transcript-The-Evolution-of-Nonduality-mp3.srt", // Track 7: "The Evolution of Nonduality"
+          "Transcript-The-Edge-of-Evolution-mp3.srt"      // Track 8: "The Edge of Evolution"
         ];
         
         const srtFileName = srtFileMap[currentTrack];
