@@ -1730,7 +1730,7 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
   };
 
   return (
-    <div className="relative h-screen w-full overflow-hidden">
+    <div className="relative h-screen w-full overflow-hidden pb-32 md:pb-40">
       {/* Background Slideshow */}
       <BackgroundSlideshow trackIndex={currentTrack} isTransitioning={isTransitioning} />
 
@@ -1796,13 +1796,14 @@ export function AudioPlayer({ initialTrackIndex = 0 }: AudioPlayerProps) {
         />
       )}
 
-      {/* Player Controls */}
+      {/* Player Controls - Sticky Bottom Bar */}
       <div 
-        className="absolute bottom-0 left-0 right-0 p-2 md:p-6 pb-safe-mobile md:pb-6 mb-4 md:mb-0"
+        className="fixed bottom-0 left-0 right-0 p-2 md:p-6 pb-safe-mobile md:pb-6 z-50"
         style={{
           paddingBottom: typeof window !== 'undefined' && window.innerWidth <= 768 && mobileSafariBottomPadding > 0 
             ? `${mobileSafariBottomPadding}px` 
-            : undefined
+            : undefined,
+          backgroundColor: 'transparent'
         }}
       >
         <div className="rounded-xl p-2 md:p-4 max-w-2xl">
